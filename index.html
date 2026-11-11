@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QUBIRA OCM | Comunicación y Marketing</title>
+<link rel="icon" href="https://raw.githubusercontent.com/qubira/IMAGENES/main/logo2.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f4f8; --card: #fff; --border: #ece7f0; --text: #17111f; --muted: #6b6475;
+    --pink: #db2777; --pink-2: #f472b6; --pink-bg: #fce7f3; --cyan: #06b6d4; --ok: #059669; --err: #dc2626;
+    --shadow: 0 10px 30px -12px rgba(30, 10, 40, .18);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  a { color: inherit; }
+  button { font: inherit; cursor: pointer; border: 0; }
+  .top { background: #120b19; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 10; }
+  .top img { width: 34px; height: 34px; border-radius: 9px; background: #241631; padding: 5px; }
+  .top b { font-size: 15px; letter-spacing: .5px; }
+  .top small { display: block; color: #c4b5d4; font-size: 10.5px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; }
+  .top .sp { flex: 1; }
+  .top .user { font-size: 12.5px; color: #e9ddf3; }
+  .tbtn { background: transparent; color: #fff; border: 1px solid #3a2a49; border-radius: 9px; padding: 7px 12px; font-size: 12.5px; font-weight: 600; text-decoration: none; }
+  .tbtn:hover { background: #241631; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 20px 60px; }
+  h1 { font-size: 22px; font-weight: 800; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 11px; padding: 10px 16px; font-weight: 700; font-size: 13px; text-decoration: none; transition: transform .15s, opacity .15s; }
+  .btn:disabled { opacity: .55; cursor: wait; }
+  .btn-pink { background: linear-gradient(135deg, var(--pink), #9333ea); color: #fff; box-shadow: 0 8px 20px -8px rgba(219,39,119,.6); }
+  .btn-pink:hover { transform: translateY(-1px); }
+  .btn-sec { background: #fff; border: 1px solid var(--border); color: var(--text); }
+  .btn-sec:hover { background: #faf7fc; }
+  .btn-danger { background: #fff; border: 1px solid #fecaca; color: var(--err); }
+  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .aviso { border-radius: 12px; padding: 12px 14px; font-size: 13px; margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start; }
+  .aviso.warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+  .aviso.err { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+  .aviso.ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+  /* Conectar */
+  .hero { padding: 40px 32px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center; overflow: hidden; position: relative; }
+  .hero::after { content: ''; position: absolute; right: -80px; top: -80px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(244,114,182,.35), transparent 70%); }
+  .hero h2 { font-size: 26px; font-weight: 800; line-height: 1.15; }
+  .hero p { color: var(--muted); font-size: 14px; margin: 10px 0 20px; line-height: 1.6; }
+  .tt-logo { width: 46px; height: 46px; border-radius: 13px; background: #000; display: grid; place-items: center; margin-bottom: 16px; box-shadow: -3px -3px 0 var(--cyan), 3px 3px 0 #fe2c55; }
+  .lista { list-style: none; display: grid; gap: 10px; position: relative; z-index: 1; }
+  .lista li { display: flex; gap: 10px; font-size: 13px; background: #faf7fc; border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; }
+  .lista li span:first-child { font-size: 16px; }
+  /* Perfil */
+  .perfil { padding: 20px 22px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+  .perfil img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--pink-bg); background: #eee; }
+  .perfil .nom { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+  .perfil .usr { color: var(--pink); font-weight: 700; font-size: 13px; text-decoration: none; }
+  .perfil .bio { color: var(--muted); font-size: 12.5px; margin-top: 4px; max-width: 520px; }
+  .perfil .acc { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .sync { font-size: 11.5px; color: var(--muted); width: 100%; text-align: right; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--pink-bg); color: var(--pink); text-transform: uppercase; letter-spacing: .4px; }
+  /* KPIs */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .kpi { padding: 16px 18px; position: relative; overflow: hidden; }
+  .kpi::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--c, var(--pink)); }
+  .kpi small { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .kpi strong { display: block; font-size: 28px; font-weight: 800; margin-top: 6px; letter-spacing: -.5px; }
+  .delta { font-size: 11.5px; font-weight: 700; margin-top: 2px; }
+  .delta.up { color: var(--ok); } .delta.down { color: var(--err); } .delta.eq { color: var(--muted); }
+  /* Gráfico */
+  .grid2 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 18px; }
+  .panel { padding: 18px 20px; }
+  .panel h3 { font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .seg { display: inline-flex; background: #f3eef7; border-radius: 9px; padding: 3px; }
+  .seg button { background: transparent; padding: 5px 10px; border-radius: 7px; font-size: 11.5px; font-weight: 700; color: var(--muted); }
+  .seg button.on { background: #fff; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  svg text { font-family: inherit; }
+  .vacio { color: var(--muted); font-size: 13px; text-align: center; padding: 30px 10px; }
+  .top3 { display: grid; gap: 10px; }
+  .top3 a { display: flex; gap: 10px; align-items: center; text-decoration: none; padding: 8px; border-radius: 12px; border: 1px solid var(--border); }
+  .top3 a:hover { background: #faf7fc; }
+  .top3 img, .ph { width: 46px; height: 60px; border-radius: 8px; object-fit: cover; background: #1f1528; flex-shrink: 0; }
+  .top3 .t { font-size: 12.5px; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .top3 .m { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+  /* Tabla */
+  .tabla { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .tabla th { text-align: right; font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border); font-weight: 700; cursor: pointer; white-space: nowrap; user-select: none; }
+  .tabla th:first-child { text-align: left; cursor: default; }
+  .tabla td { padding: 9px 10px; border-bottom: 1px solid #f4f0f7; text-align: right; font-variant-numeric: tabular-nums; }
+  .tabla td:first-child { text-align: left; }
+  .tabla tr:hover td { background: #fcfafd; }
+  .vid { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .vid img, .vid .ph { width: 34px; height: 44px; }
+  .vid span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 380px; display: block; font-weight: 600; }
+  .vid small { color: var(--muted); font-size: 11px; }
+  .eng { font-weight: 800; color: var(--pink); }
+  .scroll { overflow-x: auto; }
+  .toast { position: fixed; bottom: 22px; right: 22px; background: #120b19; color: #fff; padding: 12px 16px; border-radius: 12px; font-size: 13px; box-shadow: var(--shadow); z-index: 50; max-width: 360px; }
+  .toast.err { background: var(--err); }
+  .spin { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--pink); border-radius: 50%; animation: s .8s linear infinite; margin: 60px auto; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  @media (max-width: 900px) { .hero, .grid2 { grid-template-columns: 1fr; } .kpis { grid-template-columns: repeat(2, 1fr); } .top .user { display: none; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="https://raw.githubusercontent.com/qubira/IMAGENES/main/logo2.png" alt="QUBIRA">
+  <div><b>QUBIRA OCM</b><small>Comunicación y Marketing</small></div>
+  <div class="sp"></div>
+  <span class="user" id="usuario"></span>
+  <a class="tbtn" id="btn-modulos" href="#">Módulos</a>
+  <button class="tbtn" id="btn-salir">Cerrar sesión</button>
+</header>
+<main id="app"><div class="spin"></div></main>
+
+<script>
+'use strict';
+
+const LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const API = LOCAL ? 'http://localhost:4000' : 'https://api-qubira.onrender.com';
+const LOGIN = LOCAL ? 'http://localhost:5515/login.html' : 'https://qubira-login.vercel.app/login.html';
+const MODULOS = LOCAL ? 'http://localhost:5515/modulo.html' : 'https://qubira-login.vercel.app/modulo.html';
+const SYNC_AUTO_HORAS = 6;
+
+const estado = { cfg: null, datos: null, rango: 30, orden: 'publicado_en' };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = n => n == null ? '—' : Number(n).toLocaleString('es-PE');
+const corto = n => { n = Number(n) || 0; return n >= 1e6 ? (n / 1e6).toFixed(1).replace('.0', '') + ' M' : n >= 1e4 ? (n / 1e3).toFixed(1).replace('.0', '') + ' K' : n.toLocaleString('es-PE'); };
+const fecha = d => d ? new Date(d).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+
+// ─── Sesión ────────────────────────────────────────────────────────────────
+const token = localStorage.getItem('ocm_token');
+if (!token) location.replace('login.html');
+const usuario = JSON.parse(localStorage.getItem('ocm_user') || '{}');
+$('usuario').textContent = [usuario.nombre, usuario.apellidos].filter(Boolean).join(' ');
+$('btn-modulos').href = MODULOS;
+$('btn-salir').onclick = () => { localStorage.removeItem('ocm_token'); localStorage.removeItem('ocm_user'); location.href = LOGIN; };
+
+async function api(ruta, opciones = {}) {
+  const res = await fetch(API + '/api/ocm' + ruta, { ...opciones, headers: { Authorization: 'Bearer ' + token, ...(opciones.headers || {}) } });
+  if (res.status === 401) { localStorage.removeItem('ocm_token'); location.replace('login.html'); throw new Error('Sesión vencida'); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Error del servidor');
+  return data;
+}
+function toast(msg, err) {
+  const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 4500);
+}
+
+// ─── Carga ─────────────────────────────────────────────────────────────────
+async function cargar() {
+  try {
+    [estado.cfg, estado.datos] = await Promise.all([api('/tiktok/config'), api('/tiktok/resumen?dias=365')]);
+    pintar();
+    const c = estado.datos.cuenta;
+    // Sincronización automática si los datos tienen más de SYNC_AUTO_HORAS horas
+    if (c && (!c.ultima_sync || Date.now() - new Date(c.ultima_sync) > SYNC_AUTO_HORAS * 3600e3)) sincronizar(true);
+  } catch (e) {
+    $('app').innerHTML = `<div class="aviso err">⚠️ No se pudo cargar OCM: ${esc(e.message)} <button class="btn btn-sec" onclick="location.reload()">Reintentar</button></div>`;
+  }
+}
+
+async function conectar(btn) {
+  btn.disabled = true;
+  try { location.href = (await api('/tiktok/conectar')).url; }
+  catch (e) { toast(e.message, true); btn.disabled = false; }
+}
+async function sincronizar(silencioso) {
+  const btn = $('btn-sync'); if (btn) { btn.disabled = true; btn.textContent = '⟳ Sincronizando…'; }
+  try {
+    await api('/tiktok/sincronizar', { method: 'POST' });
+    estado.datos = await api('/tiktok/resumen?dias=365');
+    pintar();
+    if (!silencioso) toast('Métricas actualizadas desde TikTok');
+  } catch (e) {
+    toast('No se pudo sincronizar: ' + e.message, true);
+    if (btn) { btn.disabled = false; btn.textContent = '⟳ Sincronizar ahora'; }
+  }
+}
+async function desconectar(id) {
+  if (!confirm('¿Desconectar la cuenta de TikTok? Se revocará el acceso y se borrarán sus métricas guardadas.')) return;
+  try { await api('/tiktok/cuenta/' + id, { method: 'DELETE' }); toast('Cuenta desconectada'); cargar(); }
+  catch (e) { toast(e.message, true); }
+}
+
+// ─── Vistas ────────────────────────────────────────────────────────────────
+function pintar() {
+  const { cfg, datos } = estado;
+  let html = `<div class="head"><div><h1>Comunicación y Marketing</h1><p class="sub">Métricas de la cuenta de TikTok de QUBIRA, con histórico diario.</p></div>
+    <span class="badge">● TikTok ${esc(cfg.entorno)}</span></div>`;
+  const q = new URLSearchParams(location.search);
+  if (q.get('tiktok') === 'ok') html += `<div class="aviso ok">✅ Cuenta de TikTok conectada.${q.get('msg') ? ' ' + esc(q.get('msg')) : ''}</div>`;
+  if (q.get('tiktok') === 'error' || q.get('tiktok') === 'cancelado') html += `<div class="aviso err">⚠️ No se conectó TikTok: ${esc(q.get('msg') || 'operación cancelada')}</div>`;
+  if (!cfg.configurado) html += `<div class="aviso warn">⚙️ Faltan variables de TikTok en el servidor (TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET, TIKTOK_REDIRECT_URI, TOKEN_ENCRYPTION_KEY, OAUTH_STATE_SECRET). Hasta configurarlas no se puede conectar la cuenta.</div>`;
+  html += datos.cuenta ? vistaCuenta() : vistaConectar();
+  $('app').innerHTML = html;
+  enlazar();
+}
+
+function vistaConectar() {
+  return `<section class="card hero">
+    <div>
+      <div class="tt-logo"><svg width="22" height="24" viewBox="0 0 24 26" fill="#fff"><path d="M17.5 0c.4 3.2 2.2 5.2 5.4 5.4v3.7c-1.9.2-3.5-.4-5.4-1.5v6.7c0 8.5-9.3 11.2-13 5.1-2.4-3.9-.9-10.8 6.8-11.1v3.9c-.6.1-1.2.2-1.8.4-1.7.6-2.7 1.6-2.4 3.5.5 3.6 7.1 4.7 6.6-2.4V0h3.8z"/></svg></div>
+      <h2>Conecta la cuenta de TikTok de QUBIRA</h2>
+      <p>Autoriza una sola vez con la cuenta de la empresa. Los tokens se guardan cifrados y se renuevan solos; las métricas se actualizan cada día.</p>
+      <button class="btn btn-pink" id="btn-conectar" ${estado.cfg.configurado ? '' : 'disabled'}>Conectar TikTok →</button>
+    </div>
+    <ul class="lista">
+      <li><span>👥</span><span><b>Seguidores, seguidos, likes y videos</b> de la cuenta</span></li>
+      <li><span>🎬</span><span><b>Cada video</b> con vistas, likes, comentarios y compartidos</span></li>
+      <li><span>📈</span><span><b>Histórico diario</b> para ver tendencias</span></li>
+      <li><span>🔒</span><span>Todavía no: publicar videos, moderar comentarios ni demografía (requieren Content Posting y Business API)</span></li>
+    </ul>
+  </section>`;
+}
+
+function deltaDe(campo, dias = 7) {
+  const h = estado.datos.historial; if (h.length < 2) return '<div class="delta eq">Sin histórico aún</div>';
+  const actual = h[h.length - 1];
+  const limite = new Date(actual.fecha); limite.setDate(limite.getDate() - dias);
+  const base = h.find(x => new Date(x.fecha) >= limite) || h[0];
+  const d = Number(actual[campo] || 0) - Number(base[campo] || 0);
+  return `<div class="delta ${d > 0 ? 'up' : d < 0 ? 'down' : 'eq'}">${d > 0 ? '▲ +' : d < 0 ? '▼ ' : ''}${num(d)} en ${dias} días</div>`;
+}
+
+function vistaCuenta() {
+  const { cuenta: c, historial, videos } = estado.datos;
+  const ult = historial[historial.length - 1] || {};
+  const tot = videos.reduce((a, v) => ({ vistas: a.vistas + +v.vistas, likes: a.likes + +v.likes, com: a.com + +v.comentarios, sh: a.sh + +v.compartidos }), { vistas: 0, likes: 0, com: 0, sh: 0 });
+  const tasa = tot.vistas ? ((tot.likes + tot.com + tot.sh) / tot.vistas * 100).toFixed(1) + ' %' : '—';
+  const kpi = (t, v, d, color) => `<div class="card kpi" style="--c:${color}"><small>${t}</small><strong>${v}</strong>${d}</div>`;
+  const top = [...videos].sort((a, b) => b.vistas - a.vistas).slice(0, 3);
+
+  return `
+    <section class="card perfil">
+      <img src="${esc(c.avatar_url || '')}" alt="" onerror="this.style.visibility='hidden'">
+      <div>
+        <div class="nom">${esc(c.display_name || 'Cuenta de TikTok')} ${c.verificado ? '<span title="Verificada">✔️</span>' : ''}</div>
+        ${c.username ? `<a class="usr" href="${esc(c.perfil_url || 'https://www.tiktok.com/@' + c.username)}" target="_blank" rel="noopener noreferrer">@${esc(c.username)} ↗</a>` : ''}
+        ${c.bio ? `<div class="bio">${esc(c.bio)}</div>` : ''}
+      </div>
+      <div class="acc">
+        <button class="btn btn-pink" id="btn-sync">⟳ Sincronizar ahora</button>
+        <button class="btn btn-danger" id="btn-desconectar" data-id="${c.id}">Desconectar</button>
+        <div class="sync">Última sincronización: ${fecha(c.ultima_sync)}${c.ultimo_error ? ` · <span style="color:var(--err)">⚠️ ${esc(c.ultimo_error)}</span>` : ''}</div>
+      </div>
+    </section>
+
+    <section class="kpis">
+      ${kpi('Seguidores', num(ult.seguidores), deltaDe('seguidores'), '#db2777')}
+      ${kpi('Likes totales', num(ult.likes), deltaDe('likes'), '#f43f5e')}
+      ${kpi('Videos', num(ult.videos), deltaDe('videos'), '#06b6d4')}
+      ${kpi('Interacción media', tasa, `<div class="delta eq">${corto(tot.vistas)} vistas en ${videos.length} videos</div>`, '#9333ea')}
+    </section>
+
+    <section class="grid2">
+      <div class="card panel">
+        <h3>Evolución de seguidores y likes
+          <span class="seg" id="rango">${[7, 30, 90, 365].map(d => `<button data-d="${d}" class="${estado.rango === d ? 'on' : ''}">${d === 365 ? '1 año' : d + ' d'}</button>`).join('')}</span>
+        </h3>
+        ${grafico()}
+      </div>
+      <div class="card panel">
+        <h3>Videos con más vistas</h3>
+        ${top.length ? `<div class="top3">${top.map(v => `<a href="${esc(v.enlace || '#')}" target="_blank" rel="noopener noreferrer">
+          ${v.portada ? `<img src="${esc(v.portada)}" alt="">` : '<span class="ph"></span>'}
+          <div style="min-width:0"><div class="t">${esc(v.titulo || 'Sin título')}</div><div class="m">▶ ${corto(v.vistas)} · ♥ ${corto(v.likes)} · 💬 ${corto(v.comentarios)}</div></div></a>`).join('')}</div>`
+          : '<p class="vacio">Aún no hay videos sincronizados.</p>'}
+      </div>
+    </section>
+
+    <section class="card panel">
+      <h3>Todos los videos <span class="sub" style="font-weight:600">${videos.length} videos · clic en una columna para ordenar</span></h3>
+      ${videos.length ? `<div class="scroll"><table class="tabla"><thead><tr>
+        <th>Video</th>${[['publicado_en', 'Publicado'], ['vistas', 'Vistas'], ['likes', 'Likes'], ['comentarios', 'Coment.'], ['compartidos', 'Compart.'], ['eng', 'Interacción']]
+          .map(([k, t]) => `<th data-k="${k}">${t}${estado.orden === k ? ' ▾' : ''}</th>`).join('')}
+      </tr></thead><tbody>${ordenarVideos(videos).map(v => `<tr>
+        <td><a class="vid" href="${esc(v.enlace || '#')}" target="_blank" rel="noopener noreferrer">${v.portada ? `<img src="${esc(v.portada)}" alt="" style="border-radius:6px;object-fit:cover">` : '<span class="ph"></span>'}
+          <div style="min-width:0"><span>${esc(v.titulo || 'Sin título')}</span><small>${v.duracion ? v.duracion + ' s' : ''}</small></div></a></td>
+        <td>${v.publicado_en ? new Date(v.publicado_en).toLocaleDateString('es-PE') : '—'}</td>
+        <td>${num(v.vistas)}</td><td>${num(v.likes)}</td><td>${num(v.comentarios)}</td><td>${num(v.compartidos)}</td>
+        <td class="eng">${interaccion(v).toFixed(1)} %</td></tr>`).join('')}</tbody></table></div>`
+        : '<p class="vacio">Cuando la cuenta publique videos aparecerán aquí con sus métricas.</p>'}
+    </section>`;
+}
+
+const interaccion = v => +v.vistas ? (+v.likes + +v.comentarios + +v.compartidos) / +v.vistas * 100 : 0;
+function ordenarVideos(videos) {
+  const k = estado.orden;
+  return [...videos].sort((a, b) => k === 'publicado_en' ? new Date(b.publicado_en || 0) - new Date(a.publicado_en || 0)
+    : k === 'eng' ? interaccion(b) - interaccion(a) : Number(b[k]) - Number(a[k]));
+}
+
+// Gráfico de líneas en SVG (seguidores y likes, cada uno en su propia escala)
+function grafico() {
+  const corte = new Date(); corte.setDate(corte.getDate() - estado.rango);
+  const h = estado.datos.historial.filter(x => new Date(x.fecha) >= corte);
+  if (h.length < 2) return '<p class="vacio">El gráfico aparece desde el segundo día de datos. Las métricas se guardan una vez al día.</p>';
+  const W = 640, H = 220, P = 34;
+  const serie = (campo, color) => {
+    const vals = h.map(x => Number(x[campo]) || 0), min = Math.min(...vals), max = Math.max(...vals), rango = max - min || 1;
+    const pts = vals.map((v, i) => [P + i * (W - 2 * P) / (vals.length - 1), H - P - (v - min) / rango * (H - 2 * P)]);
+    const linea = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    return `<path d="${linea} L ${pts.at(-1)[0]} ${H - P} L ${P} ${H - P} Z" fill="${color}" opacity=".08"/>
+      <path d="${linea}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${pts.at(-1)[0]}" cy="${pts.at(-1)[1]}" r="4" fill="${color}"/>`;
+  };
+  const f = s => new Date(s + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Evolución de seguidores y likes">
+    ${[0, .5, 1].map(t => `<line x1="${P}" x2="${W - P}" y1="${P + t * (H - 2 * P)}" y2="${P + t * (H - 2 * P)}" stroke="#eee8f2"/>`).join('')}
+    ${serie('likes', '#f43f5e')}${serie('seguidores', '#db2777')}
+    <text x="${P}" y="${H - 10}" font-size="11" fill="#8a8094">${f(h[0].fecha)}</text>
+    <text x="${W - P}" y="${H - 10}" font-size="11" fill="#8a8094" text-anchor="end">${f(h.at(-1).fecha)}</text>
+    <circle cx="${P + 4}" cy="14" r="4" fill="#db2777"/><text x="${P + 13}" y="18" font-size="11.5" fill="#17111f" font-weight="700">Seguidores ${num(h.at(-1).seguidores)}</text>
+    <circle cx="${P + 170}" cy="14" r="4" fill="#f43f5e"/><text x="${P + 179}" y="18" font-size="11.5" fill="#17111f" font-weight="700">Likes ${num(h.at(-1).likes)}</text>
+  </svg>`;
+}
+
+function enlazar() {
+  $('btn-conectar')?.addEventListener('click', e => conectar(e.currentTarget));
+  $('btn-sync')?.addEventListener('click', () => sincronizar(false));
+  $('btn-desconectar')?.addEventListener('click', e => desconectar(e.currentTarget.dataset.id));
+  document.querySelectorAll('#rango button').forEach(b => b.onclick = () => { estado.rango = +b.dataset.d; pintar(); });
+  document.querySelectorAll('.tabla th[data-k]').forEach(th => th.onclick = () => { estado.orden = th.dataset.k; pintar(); });
+}
+
+cargar();
+// Al volver a la pestaña se refrescan los datos guardados
+document.addEventListener('visibilitychange', () => { if (!document.hidden && estado.cfg) api('/tiktok/resumen?dias=365').then(d => { estado.datos = d; pintar(); }).catch(() => {}); });
+</script>
+</body>
+</html>
