@@ -31,6 +31,25 @@
   .nav-item:hover { background: var(--sidebar-hover); color: #fff; }
   .nav-item.active { background: linear-gradient(90deg, rgba(219,39,119,.25), rgba(219,39,119,.05)); color: #fff; box-shadow: inset 3px 0 0 var(--primary); }
   .nav-item .pill { margin-left: auto; font-size: 10.5px; background: #374151; color: #e5e7eb; padding: 1px 7px; border-radius: 999px; }
+  /* Menú contraído (solo íconos), como en DST/ADG */
+  .sidebar__toggle { flex: none; width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: var(--sidebar-text); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .sidebar__toggle:hover { background: var(--sidebar-hover); color: #fff; }
+  .sidebar__toggle .icon { width: 16px; height: 16px; transition: transform .25s ease; }
+  .main, .sidebar { transition: margin-left .2s ease, width .2s ease, transform .25s; }
+  .nav-item { position: relative; }
+  body.sidebar-colapsada { --sidebar-w: 72px; }
+  body.sidebar-colapsada .sidebar__brand { flex-direction: column; padding: 16px 0 12px; gap: 10px; }
+  body.sidebar-colapsada .sb-txt { display: none; }
+  body.sidebar-colapsada .sidebar__toggle .icon { transform: rotate(180deg); }
+  body.sidebar-colapsada .sidebar nav { padding: 6px 10px; }
+  body.sidebar-colapsada .nav-label { font-size: 0; padding: 0; margin: 8px 6px; border-top: 1px solid #1f2937; }
+  body.sidebar-colapsada .nav-item { font-size: 0; justify-content: center; padding: 10px 0; gap: 0; }
+  body.sidebar-colapsada .nav-item .icon { width: 20px; height: 20px; }
+  body.sidebar-colapsada .nav-item .pill { position: absolute; top: 1px; right: 2px; font-size: 9px; padding: 1px 5px; margin: 0; }
+  body.sidebar-colapsada .sidebar__footer { padding: 12px 10px; }
+  body.sidebar-colapsada .user { justify-content: center; }
+  body.sidebar-colapsada .foot-btns { flex-direction: column; align-items: center; }
+  body.sidebar-colapsada .foot-btn { width: 44px; flex: none; height: 36px; padding: 0; }
   .sidebar__footer { padding: 14px; border-top: 1px solid #1f2937; }
   .user { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 12.5px; flex-shrink: 0; }
@@ -221,7 +240,7 @@
   @media (max-width: 1100px) { .g4 { grid-template-columns: repeat(2, 1fr); } .g21, .g3 { grid-template-columns: 1fr; } }
   @media (max-width: 860px) {
     .sidebar { transform: translateX(-100%); } body.menu-abierto .sidebar { transform: none; } body.menu-abierto .overlay { display: block; }
-    .main { margin-left: 0; } .menu-toggle { display: inline-flex; } .content, .topbar { padding-left: 16px; padding-right: 16px; }
+    .main { margin-left: 0; } .menu-toggle { display: inline-flex; } .sidebar__toggle { display: none; } body.sidebar-colapsada { --sidebar-w: 248px; } .content, .topbar { padding-left: 16px; padding-right: 16px; }
     .g2, .hero { grid-template-columns: 1fr; } .kv { grid-template-columns: 1fr; }
   }
 </style>
@@ -242,6 +261,10 @@
   <symbol id="i-sync" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.8-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></symbol>
   <symbol id="i-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4.5 18.5A1.6 1.6 0 0 0 5.9 21h12.2a1.6 1.6 0 0 0 1.4-2.5L14 9V3"/><line x1="7" y1="15" x2="17" y2="15"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
 </svg>
 
@@ -249,7 +272,8 @@
 <aside class="sidebar" id="sidebar">
   <div class="sidebar__brand">
     <img src="https://raw.githubusercontent.com/qubira/IMAGENES/main/logo2.png" alt="Qubira">
-    <div>Qubira OCM<small>Comunicación y Marketing</small></div>
+    <div class="sb-txt" style="flex:1;min-width:0">Qubira OCM<small>Comunicación y Marketing</small></div>
+    <button type="button" class="sidebar__toggle" id="sidebar-toggle" title="Contraer menú" aria-label="Contraer menú"><svg class="icon"><use href="#i-chev"/></svg></button>
   </div>
   <nav>
     <div class="nav-label">General</div>
@@ -260,10 +284,10 @@
     <button class="nav-item" data-view="rendimiento"><svg class="icon"><use href="#i-bar"/></svg> Rendimiento</button>
     <div class="nav-label">Inteligencia</div>
     <button class="nav-item" data-view="analisis"><svg class="icon"><use href="#i-zap"/></svg> Análisis</button>
-    <button class="nav-item" data-view="tendencias"><svg class="icon"><use href="#i-trend"/></svg> Tendencias</button>
-    <button class="nav-item" data-view="estrategia"><svg class="icon"><use href="#i-grid"/></svg> Estrategia</button>
+    <button class="nav-item" data-view="tendencias"><svg class="icon"><use href="#i-activity"/></svg> Tendencias</button>
+    <button class="nav-item" data-view="estrategia"><svg class="icon"><use href="#i-target"/></svg> Estrategia</button>
     <button class="nav-item" data-view="comparador"><svg class="icon"><use href="#i-share"/></svg> Comparador</button>
-    <button class="nav-item" data-view="laboratorio"><svg class="icon"><use href="#i-zap"/></svg> Laboratorio</button>
+    <button class="nav-item" data-view="laboratorio"><svg class="icon"><use href="#i-flask"/></svg> Laboratorio</button>
     <div class="nav-label">Gerencia</div>
     <button class="nav-item" data-view="informe"><svg class="icon"><use href="#i-msg"/></svg> Informe ejecutivo</button>
     <button class="nav-item" data-view="salud"><svg class="icon"><use href="#i-heart"/></svg> Salud de la cuenta</button>
@@ -271,10 +295,10 @@
     <button class="nav-item" data-view="conexion"><svg class="icon"><use href="#i-link"/></svg> Conexión</button>
   </nav>
   <div class="sidebar__footer">
-    <div class="user"><div class="avatar" id="u-avatar">--</div><div><div class="user-name" id="u-nombre"></div><div class="user-role">OCM · Qubira</div></div></div>
+    <div class="user"><div class="avatar" id="u-avatar">--</div><div class="sb-txt"><div class="user-name" id="u-nombre"></div><div class="user-role">OCM · Qubira</div></div></div>
     <div class="foot-btns">
-      <a class="foot-btn" id="btn-modulos" href="#"><svg class="icon" style="width:15px;height:15px"><use href="#i-grid"/></svg> Módulos</a>
-      <button class="foot-btn" id="btn-salir"><svg class="icon" style="width:15px;height:15px"><use href="#i-out"/></svg> Salir</button>
+      <a class="foot-btn" id="btn-modulos" href="#"><svg class="icon" style="width:15px;height:15px"><use href="#i-grid"/></svg><span class="sb-txt">Módulos</span></a>
+      <button class="foot-btn" id="btn-salir"><svg class="icon" style="width:15px;height:15px"><use href="#i-out"/></svg><span class="sb-txt">Salir</span></button>
     </div>
   </div>
 </aside>
@@ -342,6 +366,20 @@ $('btn-sync').onclick = () => sincronizar(false);
 $('btn-csv').onclick = () => exportarCsv();
 $('btn-print').onclick = () => window.print();
 document.querySelectorAll('.nav-item').forEach(b => b.onclick = () => { location.hash = b.dataset.view; });
+
+// Menú lateral contraído (solo íconos); se recuerda la preferencia
+function aplicarMenuContraido(contraido) {
+  document.body.classList.toggle('sidebar-colapsada', contraido);
+  const btn = document.getElementById('sidebar-toggle');
+  if (btn) { btn.title = contraido ? 'Expandir menú' : 'Contraer menú'; btn.setAttribute('aria-label', btn.title); }
+  document.querySelectorAll('.sidebar .nav-item, .sidebar .foot-btn').forEach(el => {
+    const texto = el.textContent.replace(/\s+/g, ' ').replace(/\s\d+\s*$/, '').trim();
+    if (contraido) el.setAttribute('title', texto); else el.removeAttribute('title');
+  });
+  try { localStorage.setItem('ocm_sb', contraido ? '1' : '0'); } catch (_) {}
+}
+try { aplicarMenuContraido(localStorage.getItem('ocm_sb') === '1'); } catch (_) {}
+document.getElementById('sidebar-toggle').onclick = () => aplicarMenuContraido(!document.body.classList.contains('sidebar-colapsada'));
 window.addEventListener('hashchange', () => { estado.vista = VISTAS[location.hash.slice(1)] ? location.hash.slice(1) : 'resumen'; document.body.classList.remove('menu-abierto'); pintar(); });
 estado.vista = VISTAS[location.hash.slice(1)] ? location.hash.slice(1) : 'resumen';
 
