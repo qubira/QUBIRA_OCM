@@ -142,6 +142,19 @@
   .spin { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: s .8s linear infinite; margin: 80px auto; }
   @keyframes s { to { transform: rotate(360deg); } }
 
+  /* Estrategia, comparador e informe */
+  table.calor td { text-align: center; font-weight: 700; font-size: 11.5px; border: 2px solid #fff; border-radius: 6px; min-width: 64px; }
+  table.calor td:first-child { background: none; text-align: left; }
+  .sim { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .sim label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .sim select, .sim input { border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px; font: inherit; font-size: 13px; color: var(--text); background: #fff; }
+  .sim-res { margin-top: 16px; padding: 14px; border-radius: 12px; background: var(--primary-light); }
+  .sim-num { font-size: 28px; font-weight: 800; color: var(--primary); }
+  .sim-num small { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .sim-factores { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .anillo { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+  .anillo b { font-size: 13.5px; }
+  table.comp td.ganador { background: #ecfdf5; color: var(--ok); font-weight: 800; }
   /* Ficha de video */
   .modal-fondo { position: fixed; inset: 0; background: rgba(17,24,39,.55); backdrop-filter: blur(3px); z-index: 70; display: grid; place-items: center; padding: 16px; }
   .modal-ficha { width: min(760px, 100%); max-height: 92vh; overflow-y: auto; padding: 22px; position: relative; }
@@ -203,6 +216,10 @@
     <div class="nav-label">Inteligencia</div>
     <button class="nav-item" data-view="analisis"><svg class="icon"><use href="#i-zap"/></svg> Análisis</button>
     <button class="nav-item" data-view="tendencias"><svg class="icon"><use href="#i-trend"/></svg> Tendencias</button>
+    <button class="nav-item" data-view="estrategia"><svg class="icon"><use href="#i-grid"/></svg> Estrategia</button>
+    <button class="nav-item" data-view="comparador"><svg class="icon"><use href="#i-share"/></svg> Comparador</button>
+    <div class="nav-label">Gerencia</div>
+    <button class="nav-item" data-view="informe"><svg class="icon"><use href="#i-msg"/></svg> Informe ejecutivo</button>
     <div class="nav-label">Configuración</div>
     <button class="nav-item" data-view="conexion"><svg class="icon"><use href="#i-link"/></svg> Conexión</button>
   </nav>
@@ -243,6 +260,9 @@ const VISTAS = {
   rendimiento: ['Rendimiento', 'Qué contenido y en qué momento funciona mejor'],
   analisis: ['Análisis', 'Puntaje de cada video, mejores horarios, hashtags, constancia y recomendaciones'],
   tendencias: ['Tendencias', 'Cuánto crece cada video día a día'],
+  estrategia: ['Estrategia', 'Cuándo publicar, qué factores influyen, atípicos y simulador'],
+  comparador: ['Comparador', 'Hasta 3 videos lado a lado'],
+  informe: ['Informe ejecutivo', 'Resultados del periodo, resumen redactado y metas'],
   conexion: ['Conexión', 'Cuenta vinculada, permisos y sincronización'],
 };
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -356,7 +376,7 @@ function pintar() {
   if (!cfg.configurado) html += `<div class="aviso warn">Faltan variables de TikTok en el servidor. Hasta configurarlas no se puede conectar la cuenta.</div>`;
   if (datos.cuenta?.ultimo_error) html += `<div class="aviso err">Última sincronización con error: ${esc(datos.cuenta.ultimo_error)}</div>`;
 
-  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: vRendimiento, analisis: vAnalisis, tendencias: vTendencias, conexion: vConexion }[vista])();
+  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: vRendimiento, analisis: vAnalisis, tendencias: vTendencias, estrategia: vEstrategia, comparador: vComparador, informe: vInforme, conexion: vConexion }[vista])();
   $('app').innerHTML = html;
   enlazar();
 }
@@ -586,6 +606,8 @@ function vConexion() {
 }
 
 function enlazar() {
+  if (typeof enlazarEstrategia === 'function') enlazarEstrategia();
+  if (typeof enlazarComparador === 'function') enlazarComparador();
   $('btn-conectar')?.addEventListener('click', e => conectar(e.currentTarget));
   $('btn-reconectar')?.addEventListener('click', e => conectar(e.currentTarget));
   $('btn-desconectar')?.addEventListener('click', e => desconectar(e.currentTarget.dataset.id));
@@ -598,6 +620,7 @@ function enlazar() {
 cargar();
 document.addEventListener('visibilitychange', () => { if (!document.hidden && estado.cfg) api('/tiktok/resumen?dias=365').then(d => { estado.datos = d; pintar(); }).catch(() => {}); });
 </script>
-<script src="analisis.js?v=1"></script>
+<script src="analisis.js?v=2"></script>
+<script src="estrategia.js?v=1"></script>
 </body>
 </html>
