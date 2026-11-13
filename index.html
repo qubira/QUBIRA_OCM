@@ -142,6 +142,24 @@
   .spin { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: s .8s linear infinite; margin: 80px auto; }
   @keyframes s { to { transform: rotate(360deg); } }
 
+  /* Ficha de video */
+  .modal-fondo { position: fixed; inset: 0; background: rgba(17,24,39,.55); backdrop-filter: blur(3px); z-index: 70; display: grid; place-items: center; padding: 16px; }
+  .modal-ficha { width: min(760px, 100%); max-height: 92vh; overflow-y: auto; padding: 22px; position: relative; }
+  .modal-x { position: absolute; top: 10px; right: 14px; font-size: 26px; color: var(--muted); }
+  .ficha-cab { display: flex; gap: 16px; margin-bottom: 16px; }
+  .ficha-cab img { width: 110px; height: 146px; object-fit: cover; border-radius: 12px; flex-shrink: 0; }
+  .ficha-tit { font-weight: 700; font-size: 14px; margin: 8px 0 4px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .ficha-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .ficha-m { background: #f9fafb; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  .ficha-m small { display: block; font-size: 11px; color: var(--muted); font-weight: 600; }
+  .ficha-m b { font-size: 17px; }
+  @media (max-width: 640px) { .ficha-grid { grid-template-columns: repeat(2, 1fr); } }
+  /* Reporte impreso o PDF: solo el contenido */
+  @media print {
+    .sidebar, .overlay, .menu-toggle, #btn-sync, #btn-csv, #btn-print, .seg { display: none !important; }
+    .main { margin: 0 !important; } .topbar { position: static; } body { background: #fff; }
+    .card { box-shadow: none; break-inside: avoid; }
+  }
   @media (max-width: 1100px) { .g4 { grid-template-columns: repeat(2, 1fr); } .g21, .g3 { grid-template-columns: 1fr; } }
   @media (max-width: 860px) {
     .sidebar { transform: translateX(-100%); } body.menu-abierto .sidebar { transform: none; } body.menu-abierto .overlay { display: block; }
@@ -182,6 +200,9 @@
     <button class="nav-item" data-view="crecimiento"><svg class="icon"><use href="#i-trend"/></svg> Crecimiento</button>
     <button class="nav-item" data-view="videos"><svg class="icon"><use href="#i-video"/></svg> Videos <span class="pill" id="n-videos">0</span></button>
     <button class="nav-item" data-view="rendimiento"><svg class="icon"><use href="#i-bar"/></svg> Rendimiento</button>
+    <div class="nav-label">Inteligencia</div>
+    <button class="nav-item" data-view="analisis"><svg class="icon"><use href="#i-zap"/></svg> Análisis</button>
+    <button class="nav-item" data-view="tendencias"><svg class="icon"><use href="#i-trend"/></svg> Tendencias</button>
     <div class="nav-label">Configuración</div>
     <button class="nav-item" data-view="conexion"><svg class="icon"><use href="#i-link"/></svg> Conexión</button>
   </nav>
@@ -200,6 +221,8 @@
     <div><h1 id="t-titulo">Resumen</h1><div class="sub" id="t-sub"></div></div>
     <div class="sp"></div>
     <span class="chip" id="t-entorno">TikTok</span>
+    <button class="btn btn-sec" id="btn-csv" style="display:none" title="Descargar los videos con sus métricas (Excel)"><svg class="icon" style="width:15px;height:15px"><use href="#i-bar"/></svg> CSV</button>
+    <button class="btn btn-sec" id="btn-print" style="display:none" title="Imprimir o guardar como PDF">Reporte</button>
     <button class="btn btn-primary" id="btn-sync" style="display:none"><svg class="icon" style="width:15px;height:15px"><use href="#i-sync"/></svg> Sincronizar</button>
   </header>
   <main class="content" id="app"><div class="spin"></div></main>
@@ -218,6 +241,8 @@ const VISTAS = {
   crecimiento: ['Crecimiento', 'Evolución diaria de seguidores, likes y videos'],
   videos: ['Videos', 'Rendimiento de cada publicación'],
   rendimiento: ['Rendimiento', 'Qué contenido y en qué momento funciona mejor'],
+  analisis: ['Análisis', 'Puntaje de cada video, mejores horarios, hashtags, constancia y recomendaciones'],
+  tendencias: ['Tendencias', 'Cuánto crece cada video día a día'],
   conexion: ['Conexión', 'Cuenta vinculada, permisos y sincronización'],
 };
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -245,6 +270,8 @@ $('btn-salir').onclick = () => { localStorage.removeItem('ocm_token'); localStor
 $('menu-toggle').onclick = () => document.body.classList.toggle('menu-abierto');
 $('overlay').onclick = () => document.body.classList.remove('menu-abierto');
 $('btn-sync').onclick = () => sincronizar(false);
+$('btn-csv').onclick = () => exportarCsv();
+$('btn-print').onclick = () => window.print();
 document.querySelectorAll('.nav-item').forEach(b => b.onclick = () => { location.hash = b.dataset.view; });
 window.addEventListener('hashchange', () => { estado.vista = VISTAS[location.hash.slice(1)] ? location.hash.slice(1) : 'resumen'; document.body.classList.remove('menu-abierto'); pintar(); });
 estado.vista = VISTAS[location.hash.slice(1)] ? location.hash.slice(1) : 'resumen';
@@ -317,6 +344,8 @@ function pintar() {
   $('t-sub').textContent = VISTAS[vista][1];
   $('t-entorno').textContent = 'TikTok ' + (cfg.entorno || '');
   $('btn-sync').style.display = datos.cuenta ? '' : 'none';
+  $('btn-csv').style.display = datos.cuenta && datos.videos.length ? '' : 'none';
+  $('btn-print').style.display = datos.cuenta ? '' : 'none';
   $('n-videos').textContent = datos.videos.length;
   document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.view === vista));
 
@@ -327,7 +356,7 @@ function pintar() {
   if (!cfg.configurado) html += `<div class="aviso warn">Faltan variables de TikTok en el servidor. Hasta configurarlas no se puede conectar la cuenta.</div>`;
   if (datos.cuenta?.ultimo_error) html += `<div class="aviso err">Última sincronización con error: ${esc(datos.cuenta.ultimo_error)}</div>`;
 
-  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: vRendimiento, conexion: vConexion }[vista])();
+  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: vRendimiento, analisis: vAnalisis, tendencias: vTendencias, conexion: vConexion }[vista])();
   $('app').innerHTML = html;
   enlazar();
 }
@@ -387,7 +416,7 @@ function vResumen() {
 }
 
 function itemVideo(x, r) {
-  return `<a class="top-item" href="${esc(x.enlace || '#')}" target="_blank" rel="noopener noreferrer">
+  return `<a class="top-item" href="#" data-video="${esc(x.video_id)}">
     <span class="rank">${r}</span>${x.portada ? `<img class="cover" src="${esc(x.portada)}" alt="">` : '<span class="cover"></span>'}
     <div style="min-width:0"><div class="tt">${esc(x.titulo || 'Sin título')}</div>
     <div class="mm">${corto(x.vistas)} vistas · ${corto(x.likes)} likes · ${fpct(tasaVideo(x))}</div></div></a>`;
@@ -469,7 +498,7 @@ function vVideos() {
     <div class="toolbar"><input class="input" id="buscar" placeholder="Buscar por título del video…" value="${esc(estado.buscar)}"><span class="chip" style="align-self:center">${v.length} de ${estado.datos.videos.length} videos</span></div>
     ${v.length ? `<div class="scroll"><table><thead><tr><th>Video</th>${cols.map(([k, t]) => `<th data-k="${k}">${t}${estado.orden === k ? ' ▾' : ''}</th>`).join('')}</tr></thead><tbody>
       ${v.map(x => { const rel = +x.vistas / media; return `<tr>
-        <td><a class="vid" href="${esc(x.enlace || '#')}" target="_blank" rel="noopener noreferrer">${x.portada ? `<img class="cover" src="${esc(x.portada)}" alt="">` : '<span class="cover"></span>'}<div><span>${esc(x.titulo || 'Sin título')}</span><small style="color:var(--muted)">${x.duracion ? x.duracion + ' s' : ''}</small></div></a></td>
+        <td><a class="vid" href="#" data-video="${esc(x.video_id)}">${x.portada ? `<img class="cover" src="${esc(x.portada)}" alt="">` : '<span class="cover"></span>'}<div><span>${esc(x.titulo || 'Sin título')}</span><small style="color:var(--muted)">${x.duracion ? x.duracion + ' s' : ''}</small></div></a></td>
         <td>${x.publicado_en ? new Date(x.publicado_en).toLocaleDateString('es-PE') : '—'}</td>
         <td><b>${num(x.vistas)}</b></td><td>${num(x.likes)}</td><td>${num(x.comentarios)}</td><td>${num(x.compartidos)}</td>
         <td class="eng">${fpct(tasaVideo(x))}</td><td class="${rel >= 1 ? 'up' : 'down'}">${rel.toFixed(1)}×</td></tr>`; }).join('')}
@@ -569,5 +598,6 @@ function enlazar() {
 cargar();
 document.addEventListener('visibilitychange', () => { if (!document.hidden && estado.cfg) api('/tiktok/resumen?dias=365').then(d => { estado.datos = d; pintar(); }).catch(() => {}); });
 </script>
+<script src="analisis.js?v=1"></script>
 </body>
 </html>
