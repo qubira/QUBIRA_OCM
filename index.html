@@ -173,6 +173,23 @@
     .main { margin: 0 !important; } .topbar { position: static; } body { background: #fff; }
     .card { box-shadow: none; break-inside: avoid; }
   }
+  /* Laboratorio */
+  .lab-fila { display: grid; grid-template-columns: minmax(0, 150px) 1fr auto; gap: 10px; align-items: center; padding: 5px 0; font-size: 12.5px; }
+  .lab-fila .tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .lab-fila .tt:empty { display: none; } td .lab-fila { grid-template-columns: 1fr auto; padding: 0; }
+  .lab-fila b { white-space: nowrap; }
+  .lab-barra { height: 10px; border-radius: 99px; background: var(--border); overflow: hidden; } .lab-barra i { display: block; height: 100%; border-radius: 99px; }
+  .lab-proy { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .lab-proy div { display: grid; gap: 2px; padding: 14px; border-radius: 12px; background: var(--primary-light); }
+  .lab-proy small { color: var(--muted); font-weight: 600; } .lab-proy b { font-size: 26px; font-weight: 800; color: var(--primary); }
+  .lab-sel { margin-left: auto; border: 1px solid var(--border); border-radius: 9px; padding: 6px 10px; font: inherit; font-size: 13px; background: #fff; text-transform: capitalize; }
+  .sim input[type=number], .sim input[type=date] { width: 100%; min-width: 0; }
+  .cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .cal-h { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); }
+  .cal-d { min-height: 64px; border: 1px solid var(--border); border-radius: 10px; padding: 5px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .cal-d span { font-size: 11px; font-weight: 700; color: var(--muted); } .cal-d.sin { background: #fafafa; } .cal-d.vacio { border: none; }
+  .cal-v { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 6px; padding: 2px 5px; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cal-v.top { background: #ecfdf5; color: var(--ok); } .cal-v.med { background: var(--primary-light); color: var(--primary); } .cal-v.bajo { background: #fef3c7; color: #b45309; }
+  @media (max-width: 640px) { .cal { gap: 3px; } .cal-d { min-height: 48px; padding: 3px; } .lab-fila { grid-template-columns: minmax(0, 90px) 1fr auto; } }
   /* Salud */
   .nota-anillo { --p: 0; --c: var(--primary); width: 150px; aspect-ratio: 1; margin: 6px auto 0; border-radius: 50%; display: grid; place-content: center; text-align: center;
     background: radial-gradient(closest-side, #fff 78%, transparent 79%), conic-gradient(var(--c) calc(var(--p) * 1%), var(--border) 0); }
@@ -246,6 +263,7 @@
     <button class="nav-item" data-view="tendencias"><svg class="icon"><use href="#i-trend"/></svg> Tendencias</button>
     <button class="nav-item" data-view="estrategia"><svg class="icon"><use href="#i-grid"/></svg> Estrategia</button>
     <button class="nav-item" data-view="comparador"><svg class="icon"><use href="#i-share"/></svg> Comparador</button>
+    <button class="nav-item" data-view="laboratorio"><svg class="icon"><use href="#i-zap"/></svg> Laboratorio</button>
     <div class="nav-label">Gerencia</div>
     <button class="nav-item" data-view="informe"><svg class="icon"><use href="#i-msg"/></svg> Informe ejecutivo</button>
     <button class="nav-item" data-view="salud"><svg class="icon"><use href="#i-heart"/></svg> Salud de la cuenta</button>
@@ -292,6 +310,7 @@ const VISTAS = {
   estrategia: ['Estrategia', 'Cuándo publicar, qué factores influyen, atípicos y simulador'],
   comparador: ['Comparador', 'Hasta 3 videos lado a lado'],
   informe: ['Informe ejecutivo', 'Resultados del periodo, resumen redactado y metas'],
+  laboratorio: ['Laboratorio', 'Curva de vida, despegues, seguidores por video, temas, proyección y calendario'],
   salud: ['Salud de la cuenta', 'Auditoría automática del perfil y del contenido'],
   conexion: ['Conexión', 'Cuenta vinculada, permisos y sincronización'],
 };
@@ -406,7 +425,7 @@ function pintar() {
   if (!cfg.configurado) html += `<div class="aviso warn">Faltan variables de TikTok en el servidor. Hasta configurarlas no se puede conectar la cuenta.</div>`;
   if (datos.cuenta?.ultimo_error) html += `<div class="aviso err">Última sincronización con error: ${esc(datos.cuenta.ultimo_error)}</div>`;
 
-  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: vRendimiento, analisis: vAnalisis, tendencias: vTendencias, estrategia: vEstrategia, comparador: vComparador, informe: vInforme, salud: vSalud, conexion: vConexion }[vista])();
+  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: vRendimiento, analisis: vAnalisis, tendencias: vTendencias, estrategia: vEstrategia, comparador: vComparador, informe: vInforme, laboratorio: vLaboratorio, salud: vSalud, conexion: vConexion }[vista])();
   $('app').innerHTML = html;
   enlazar();
 }
@@ -637,6 +656,7 @@ function vConexion() {
 function enlazar() {
   if (typeof enlazarEstrategia === 'function') enlazarEstrategia();
   if (typeof enlazarComparador === 'function') enlazarComparador();
+  if (typeof enlazarLaboratorio === 'function') enlazarLaboratorio();
   $('btn-conectar')?.addEventListener('click', e => conectar(e.currentTarget));
   $('btn-reconectar')?.addEventListener('click', e => conectar(e.currentTarget));
   $('btn-desconectar')?.addEventListener('click', e => desconectar(e.currentTarget.dataset.id));
@@ -652,5 +672,6 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && es
 <script src="analisis.js?v=3"></script>
 <script src="estrategia.js?v=2"></script>
 <script src="salud.js?v=1"></script>
+<script src="pro.js?v=2"></script>
 </body>
 </html>
