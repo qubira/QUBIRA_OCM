@@ -173,29 +173,6 @@
     .main { margin: 0 !important; } .topbar { position: static; } body { background: #fff; }
     .card { box-shadow: none; break-inside: avoid; }
   }
-  /* Publicar */
-  .form-pub { display: grid; gap: 14px; }
-  .soltar { display: grid; place-items: center; text-align: center; border: 2px dashed var(--border); border-radius: 14px; padding: 26px 14px; cursor: pointer; transition: .15s; }
-  .soltar:hover, .soltar.sobre { border-color: var(--primary); background: var(--primary-light); }
-  .soltar span { display: grid; gap: 4px; justify-items: center; min-width: 0; }
-  .soltar b { word-break: break-all; } .soltar small { color: var(--muted); font-size: 12px; }
-  #pub-previa { width: 100%; max-height: 340px; border-radius: 12px; background: #000; }
-  .seg-pub { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
-  .seg-pub label { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--border); border-radius: 12px; padding: 12px; cursor: pointer; }
-  .seg-pub label:has(input:checked) { border-color: var(--primary); background: var(--primary-light); }
-  .seg-pub label:has(input:disabled) { opacity: .5; cursor: not-allowed; }
-  .seg-pub span { display: grid; gap: 3px; } .seg-pub small { color: var(--muted); font-size: 12px; }
-  .campos-directo { display: grid; gap: 12px; } .campos-directo.apagado { display: none; }
-  .campo { display: grid; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
-  .campo small { font-weight: 500; }
-  .campo textarea, .campo select { border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; font: inherit; font-size: 13px; color: var(--text); background: #fff; resize: vertical; width: 100%; }
-  .checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; font-size: 13px; }
-  .checks label { display: flex; gap: 8px; align-items: center; }
-  .barra-sub { height: 8px; border-radius: 99px; background: var(--border); overflow: hidden; }
-  .barra-sub div { height: 100%; width: 0; background: var(--primary); transition: width .2s; }
-  .destino { display: flex; gap: 12px; align-items: center; } .destino img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; }
-  .pasos { padding-left: 20px; display: grid; gap: 6px; font-size: 13px; }
-  .btn-mini { padding: 5px 10px; font-size: 12px; }
   /* Salud */
   .nota-anillo { --p: 0; --c: var(--primary); width: 150px; aspect-ratio: 1; margin: 6px auto 0; border-radius: 50%; display: grid; place-content: center; text-align: center;
     background: radial-gradient(closest-side, #fff 78%, transparent 79%), conic-gradient(var(--c) calc(var(--p) * 1%), var(--border) 0); }
@@ -272,8 +249,6 @@
     <div class="nav-label">Gerencia</div>
     <button class="nav-item" data-view="informe"><svg class="icon"><use href="#i-msg"/></svg> Informe ejecutivo</button>
     <button class="nav-item" data-view="salud"><svg class="icon"><use href="#i-heart"/></svg> Salud de la cuenta</button>
-    <div class="nav-label">Contenido</div>
-    <button class="nav-item" data-view="publicar"><svg class="icon"><use href="#i-play"/></svg> Publicar</button>
     <div class="nav-label">Configuración</div>
     <button class="nav-item" data-view="conexion"><svg class="icon"><use href="#i-link"/></svg> Conexión</button>
   </nav>
@@ -317,7 +292,6 @@ const VISTAS = {
   estrategia: ['Estrategia', 'Cuándo publicar, qué factores influyen, atípicos y simulador'],
   comparador: ['Comparador', 'Hasta 3 videos lado a lado'],
   informe: ['Informe ejecutivo', 'Resultados del periodo, resumen redactado y metas'],
-  publicar: ['Publicar', 'Envía videos a TikTok: borrador o publicación directa'],
   salud: ['Salud de la cuenta', 'Auditoría automática del perfil y del contenido'],
   conexion: ['Conexión', 'Cuenta vinculada, permisos y sincronización'],
 };
@@ -432,7 +406,7 @@ function pintar() {
   if (!cfg.configurado) html += `<div class="aviso warn">Faltan variables de TikTok en el servidor. Hasta configurarlas no se puede conectar la cuenta.</div>`;
   if (datos.cuenta?.ultimo_error) html += `<div class="aviso err">Última sincronización con error: ${esc(datos.cuenta.ultimo_error)}</div>`;
 
-  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: vRendimiento, analisis: vAnalisis, tendencias: vTendencias, estrategia: vEstrategia, comparador: vComparador, informe: vInforme, publicar: vPublicar, salud: vSalud, conexion: vConexion }[vista])();
+  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: vRendimiento, analisis: vAnalisis, tendencias: vTendencias, estrategia: vEstrategia, comparador: vComparador, informe: vInforme, salud: vSalud, conexion: vConexion }[vista])();
   $('app').innerHTML = html;
   enlazar();
 }
@@ -654,7 +628,6 @@ function vConexion() {
         </div></div>
       <div class="card panel"><div class="sec-title">Qué puede hacer OCM</div>
         <div class="insight"><span class="e">✅</span><div><b>Disponible</b><p>Seguidores, seguidos, likes, videos, métricas por video e histórico diario.</p></div></div>
-        <div class="insight"><span class="e">🎬</span><div><b>Publicar videos</b><p>Desde <a href="#publicar">Publicar</a>: requiere Content Posting API (video.upload, video.publish) en el portal de TikTok.</p></div></div>
         <div class="insight"><span class="e">💬</span><div><b>Comentarios y demografía</b><p>Requieren la Business API con correo corporativo.</p></div></div>
         <div class="insight"><span class="e">🔐</span><div><b>Seguridad</b><p>Los tokens se guardan cifrados (AES-256) y el Client Secret solo lo usa el servidor.</p></div></div>
       </div>
@@ -664,7 +637,6 @@ function vConexion() {
 function enlazar() {
   if (typeof enlazarEstrategia === 'function') enlazarEstrategia();
   if (typeof enlazarComparador === 'function') enlazarComparador();
-  if (typeof enlazarPublicar === 'function') enlazarPublicar();
   $('btn-conectar')?.addEventListener('click', e => conectar(e.currentTarget));
   $('btn-reconectar')?.addEventListener('click', e => conectar(e.currentTarget));
   $('btn-desconectar')?.addEventListener('click', e => desconectar(e.currentTarget.dataset.id));
@@ -679,6 +651,6 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && es
 </script>
 <script src="analisis.js?v=3"></script>
 <script src="estrategia.js?v=2"></script>
-<script src="publicar.js?v=1"></script>
+<script src="salud.js?v=1"></script>
 </body>
 </html>
