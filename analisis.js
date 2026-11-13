@@ -222,7 +222,12 @@ function abrirVideo(id) {
         <span class="chip" style="background:${col}1f;color:${col}">${cat} · ${p}/100</span>
         <p class="ficha-tit">${esc(v.titulo || 'Sin título')}</p>
         <p class="sub">${v.publicado_en ? 'Publicado ' + fecha(v.publicado_en) : ''}${v.duracion ? ' · ' + v.duracion + ' s' : ''}</p>
-        <a class="btn btn-primary" style="margin-top:10px" href="${esc(v.enlace || '#')}" target="_blank" rel="noopener noreferrer">Ver en TikTok ↗</a>
+        <div class="ficha-acc">
+          <a class="btn btn-primary" href="${esc(v.enlace || '#')}" target="_blank" rel="noopener noreferrer">Ver en TikTok ↗</a>
+          <button class="btn btn-sec" data-refrescar="${esc(v.video_id)}">Actualizar desde TikTok</button>
+          ${v.embed ? `<button class="btn btn-sec" data-embed="${esc(v.embed)}">Copiar embed</button>` : ''}
+        </div>
+        <p class="sub" style="margin-top:8px">${v.alto && v.ancho ? `${v.ancho}×${v.alto} · ${+v.alto >= +v.ancho ? 'vertical' : 'horizontal'}` : ''}${v.actualizado ? ` · datos del ${fecha(v.actualizado)}` : ''}</p>
       </div>
     </div>
     <div class="ficha-grid">
