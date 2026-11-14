@@ -305,6 +305,9 @@
   .ev-res div { display: grid; gap: 1px; border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
   .ev-res small { font-size: 10.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; } .ev-res b { font-size: 17px; font-weight: 800; } .ev-res em { font-style: normal; font-size: 11px; color: var(--muted); }
   table.ev-tabla td, table.ev-tabla th { font-size: 12px; } table.ev-tabla td:first-child, table.ev-tabla th:first-child { text-align: left; }
+  table.rd-tabla td:first-child, table.rd-tabla th:first-child, table.rd-tabla td:last-child, table.rd-tabla th:last-child { text-align: left; } table.rd-tabla td:nth-child(2):has(a) { text-align: left; }
+  tr.rd-mejor td { background: #ecfdf5; } tr.rd-vacio td { color: #cbd5e1; }
+  .rd-pila { display: flex; height: 14px; border-radius: 99px; overflow: hidden; margin: 4px 0 12px; background: #f1f5f9; }
   .st-click { cursor: pointer; } .st-click:hover td { background: #f5f3ff; }
   /* Selector de rango */
   .seg-rango { flex-wrap: wrap; align-items: center; }
@@ -612,7 +615,7 @@ function pintar() {
   if (!cfg.configurado) html += `<div class="aviso warn">Faltan variables de TikTok en el servidor. Hasta configurarlas no se puede conectar la cuenta.</div>`;
   if (datos.cuenta?.ultimo_error) html += `<div class="aviso err">Última sincronización con error: ${esc(datos.cuenta.ultimo_error)}</div>`;
 
-  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: vRendimiento, analisis: vAnalisis, tendencias: vTendencias, estrategia: vEstrategia, comparador: vComparador, informe: vInforme, laboratorio: vLaboratorio, sitios: vSitios, salud: vSalud, conexion: vConexion }[vista])();
+  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: typeof vRendimientoDet === 'function' ? vRendimientoDet : vRendimiento, analisis: vAnalisis, tendencias: vTendencias, estrategia: vEstrategia, comparador: vComparador, informe: vInforme, laboratorio: vLaboratorio, sitios: vSitios, salud: vSalud, conexion: vConexion }[vista])();
   $('app').innerHTML = html;
   enlazar();
 }
@@ -930,5 +933,6 @@ document.addEventListener('visibilitychange', () => {
 <script src="sitios.js?v=3"></script>
 <script src="sitios2.js?v=1"></script>
 <script src="detalle.js?v=1"></script>
+<script src="rendimiento.js?v=3"></script>
 </body>
 </html>
