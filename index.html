@@ -261,6 +261,7 @@
   .vh-grid div { display: grid; gap: 2px; border: 1px solid var(--border); border-radius: 9px; padding: 7px 9px; font-size: 11.5px; background: #fff; }
   .vh-grid div.si { border-color: #a5f3fc; background: #ecfeff; } .vh-grid b { font-size: 12px; }
   .vh-mini { display: block; }
+  .hist-tabla td:last-child, .hist-tabla th:last-child { text-align: left; }
   /* Sitios web */
   .st-chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .st-chips button { border: 1px solid var(--border); background: #fff; border-radius: 99px; padding: 6px 14px; font-size: 12.5px; font-weight: 600; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
@@ -759,6 +760,7 @@ function vCrecimiento() {
       ${kpi('Ratio likes / seguidor', m.ult.seguidores ? (m.ult.likes / m.ult.seguidores).toFixed(1) : '—', `<div class="delta eq">likes totales por seguidor</div>`, 'i-zap', '#7c3aed')}
     </section>
     <section class="card panel" style="margin-bottom:16px"><div class="sec-title">Evolución ${selectorRango()}</div>${grafico(['seguidores', 'likes'])}</section>
+    ${typeof historialPublicaciones === "function" ? historialPublicaciones() : ""}
     <section class="card panel"><div class="sec-title">Registro diario <small>${h.length} día(s) guardados</small></div>
       ${h.length ? `<div class="scroll"><table><thead><tr><th>Fecha</th><th>Seguidores</th><th>Δ</th><th>Likes</th><th>Δ</th><th>Videos</th><th>Δ</th><th>Seguidos</th></tr></thead><tbody>${filas}</tbody></table></div>` : '<p class="vacio">Sin registros todavía.</p>'}
     </section>`;
@@ -891,7 +893,7 @@ document.addEventListener('visibilitychange', () => {
 <script src="analisis.js?v=4"></script>
 <script src="estrategia.js?v=3"></script>
 <script src="salud.js?v=2"></script>
-<script src="pro.js?v=2"></script>
+<script src="pro.js?v=4"></script>
 <script src="horas.js?v=16"></script>
 <script src="sitios.js?v=1"></script>
 </body>

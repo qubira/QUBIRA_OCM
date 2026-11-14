@@ -174,3 +174,55 @@ function enlazarLaboratorio() {
   };
   meta.oninput = fe.oninput = calc; calc();
 }
+
+/* ─── Historial de publicaciones (Crecimiento) ─────────────────────────────
+   TikTok no da la evolución histórica de la cuenta; esto se arma con la fecha
+   de publicación de cada video y lo que acumula hoy. */
+let histPub = 'mes';
+function historialPublicaciones() {
+  const vs = (estado.datos.videos || []).filter(v => v.publicado_en);
+  if (!vs.length) return '';
+  const lima = d => new Date(new Date(d).getTime() - 5 * 36e5);
+  const clave = d => {
+    const x = lima(d);
+    if (histPub === 'mes') return x.toISOString().slice(0, 7);
+    const lunes = new Date(x); lunes.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7));
+    return lunes.toISOString().slice(0, 10);
+  };
+  const g = {};
+  for (const v of vs) {
+    const k = clave(v.publicado_en), o = g[k] ||= { k, n: 0, vistas: 0, likes: 0, com: 0, sh: 0, mejor: null };
+    o.n++; o.vistas += +v.vistas; o.likes += +v.likes; o.com += +v.comentarios; o.sh += +v.compartidos;
+    if (!o.mejor || +v.vistas > +o.mejor.vistas) o.mejor = v;
+  }
+  // Rellena los periodos sin publicaciones entre el primero y hoy
+  const claves = Object.keys(g).sort(), filas = [];
+  let cur = claves[0];
+  const fin = clave(new Date());
+  for (let i = 0; cur <= fin && i < 400; i++) {
+    filas.push(g[cur] || { k: cur, n: 0, vistas: 0, likes: 0, com: 0, sh: 0, mejor: null });
+    if (histPub === 'mes') { const [y, m] = cur.split('-').map(Number); cur = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`; }
+    else cur = new Date(new Date(cur + 'T12:00:00Z').getTime() + 7 * 864e5).toISOString().slice(0, 10);
+  }
+  const et = k => histPub === 'mes' ? new Date(k + '-15').toLocaleDateString('es-PE', { month: 'short', year: '2-digit' }) : 'sem. ' + new Date(k + 'T12:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
+  const maxV = Math.max(1, ...filas.map(f => f.vistas)), maxN = Math.max(1, ...filas.map(f => f.n));
+  const W = 720, H = 250, IZQ = 8, ABA = 30, ARR = 48, n = filas.length, an = (W - 2 * IZQ) / n, cada = Math.max(1, Math.ceil(n / 12));
+  const mejorP = filas.reduce((a, f) => (f.vistas > (a?.vistas || 0) ? f : a), null);
+  const svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" class="g-svg" role="img">
+    ${filas.map((f, i) => { const x = IZQ + i * an, alto = f.vistas ? Math.max(3, f.vistas / maxV * (H - ABA - ARR)) : 0, yN = 16;
+      return `<rect x="${x + an * .14}" y="${H - ABA - alto}" width="${an * .72}" height="${alto}" rx="3" fill="${f === mejorP ? '#db2777' : '#f9a8d4'}"><title>${et(f.k)} · ${f.n} video(s) · ${num(f.vistas)} vistas · ${num(f.likes)} likes · ${num(f.com)} comentarios · ${num(f.sh)} compartidos</title></rect>
+        ${f.vistas && n <= 26 ? `<text x="${x + an / 2}" y="${H - ABA - alto - 6}" font-size="10" font-weight="700" fill="#9d174d" text-anchor="middle">${num(f.vistas)}</text>` : ''}
+        ${f.n ? `<circle cx="${x + an / 2}" cy="${yN}" r="${n <= 26 ? 9 : 5}" fill="#4f46e5" pointer-events="none"/>${n <= 26 ? `<text x="${x + an / 2}" y="${yN + 3.5}" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle" pointer-events="none">${f.n}</text>` : ''}` : ''}
+        ${i % cada === 0 || i === n - 1 ? `<text x="${x + an / 2}" y="${H - 10}" font-size="9.5" fill="#9ca3af" text-anchor="middle">${et(f.k)}</text>` : ''}`; }).join('')}
+    <line x1="${IZQ}" x2="${W - IZQ}" y1="${H - ABA}" y2="${H - ABA}" stroke="#e5e7eb"/></svg>`;
+  const tabla = [...filas].reverse().filter(f => f.n).map(f => `<tr><td><b>${histPub === 'mes' ? new Date(f.k + '-15').toLocaleDateString('es-PE', { month: 'long', year: 'numeric' }) : et(f.k)}</b></td>
+    <td>${f.n}</td><td><b>${num(f.vistas)}</b></td><td>${num(Math.round(f.vistas / f.n))}</td><td>${num(f.likes)}</td><td>${num(f.com)}</td><td>${num(f.sh)}</td>
+    <td>${f.mejor ? `<a href="#" data-video="${esc(f.mejor.video_id)}">${esc((f.mejor.titulo || 'Video').replace(/\*\*/g, '').slice(0, 40))}</a> <small class="sub">${num(+f.mejor.vistas)}</small>` : '—'}</td></tr>`).join('');
+  return `<section class="card panel" style="margin-bottom:16px"><div class="sec-title">Historial de publicaciones <small>desde el primer video</small>
+      <span class="seg" style="margin-left:auto" id="hist-pub"><button data-hp="mes" class="${histPub === 'mes' ? 'on' : ''}">Por mes</button><button data-hp="semana" class="${histPub === 'semana' ? 'on' : ''}">Por semana</button></span></div>
+    ${svg}
+    <p class="sub" style="font-size:12px"><span style="color:#f9a8d4">■</span> vistas que juntan hoy los videos publicados en ese periodo (<span style="color:#db2777">■</span> el mejor) · <span style="color:#4f46e5">●</span> cantidad de videos publicados. Pasa el mouse por cada barra para ver el detalle.</p>
+    <div class="scroll" style="margin-top:10px"><table class="hist-tabla"><thead><tr><th>Periodo</th><th>Videos</th><th>Vistas</th><th>Vistas por video</th><th>Likes</th><th>Coment.</th><th>Compart.</th><th>Mejor video</th></tr></thead><tbody>${tabla}</tbody></table></div>
+  </section>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-hp]'); if (b) { histPub = b.dataset.hp; repintarSeguro(); } });
