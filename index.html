@@ -658,11 +658,11 @@ function grafico(campos) {
   const leyenda = escalas.map((e, k) => `<circle cx="${IZQ + 4 + k * 190}" cy="14" r="4" fill="${colores[e.c]}"/><text x="${IZQ + 13 + k * 190}" y="18" font-size="11.5" font-weight="700" fill="#111827">${nombre(e.c)} ${num(e.vals.at(-1))}${k < 2 ? ` <tspan font-weight="500" fill="#9ca3af">(eje ${k ? 'der.' : 'izq.'})</tspan>` : ''}</text>`).join('');
   const resumen = escalas.map(e => {
     const a = e.vals[0], z = e.vals.at(-1), dlt = z - a, dias = Math.max(1, n - 1);
-    const mejor = e.vals.slice(1).map((v, i) => [v - e.vals[i], etq(h[i + 1])]).sort((p, q) => q[0] - p[0])[0];
+    const mejor = e.vals.slice(1).map((v, i) => [h[i].aprox ? -Infinity : v - e.vals[i], etq(h[i + 1])]).sort((p, q) => q[0] - p[0])[0];
     return `<div class="g-res" style="--c:${colores[e.c]}"><b>${nombre(e.c)}</b>
       <span>Inicio <strong>${num(a)}</strong></span><span>Actual <strong>${num(z)}</strong></span>
       <span>Cambio <strong class="${dlt > 0 ? 'up' : dlt < 0 ? 'down' : ''}">${dlt > 0 ? '+' : ''}${num(dlt)}${a ? ` (${dlt >= 0 ? '+' : ''}${(dlt / a * 100).toFixed(1)} %)` : ''}</strong></span>
-      <span>${modoHora() ? 'Por hora' : 'Por día'} <strong>${(dlt / dias).toFixed(1)}</strong></span>
+      ${h[0].aprox ? `<span>Desde <strong>${etq(h[0]).toLowerCase()}</strong></span>` : `<span>${modoHora() ? 'Por hora' : 'Por día'} <strong>${(dlt / dias).toFixed(1)}</strong></span>`}
       ${mejor && mejor[0] > 0 ? `<span>${modoHora() ? 'Mejor hora' : 'Mejor día'} <strong>+${num(mejor[0])} · ${mejor[1]}</strong></span>` : ''}</div>`;
   }).join('');
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Evolución" class="g-svg">${guias}${series}${fechas}${leyenda}${zonas}</svg>
@@ -819,6 +819,6 @@ document.addEventListener('visibilitychange', () => {
 <script src="estrategia.js?v=2"></script>
 <script src="salud.js?v=1"></script>
 <script src="pro.js?v=2"></script>
-<script src="horas.js?v=1"></script>
+<script src="horas.js?v=3"></script>
 </body>
 </html>

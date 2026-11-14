@@ -24,8 +24,26 @@ function filasHora() {
   const f = fechaModo(), d = estado.horas[f];
   if (!d) { cargarHoras(f); return null; }
   const filas = d.horas.map(h => ({ ...h, fecha: h.hora, etiqueta: h.hora.slice(11, 16) }));
-  if (d.base && filas.length) filas.unshift({ ...d.base, fecha: d.base.hora, etiqueta: 'Inicio', base: true });
+  const base = d.base || cierreDiaAnterior(f);
+  if (base && filas.length) filas.unshift({ ...base, fecha: base.hora, etiqueta: d.base ? 'Inicio' : 'Cierre ' + fdia(base.hora.slice(0, 10)), base: true, aprox: !d.base });
   return filas;
+}
+
+/* Si aún no hay foto por hora anterior al día, el punto de partida es el cierre del
+   día anterior que ya está en el histórico diario (cuenta y videos). */
+function cierreDiaAnterior(fecha) {
+  const h = (estado.datos.historial || []).filter(x => x.fecha < fecha).at(-1);
+  if (!h) return null;
+  const diario = (estado.datos.diario || []).filter(x => x.fecha < fecha);
+  const ultimoDia = diario.map(x => x.fecha).sort().at(-1);
+  const delDia = diario.filter(x => x.fecha === ultimoDia);
+  const suma = k => (delDia.length ? delDia.reduce((a, x) => a + (+x[k] || 0), 0) : null);
+  return { hora: h.fecha + 'T23:59', seguidores: h.seguidores, seguidos: h.seguidos, likes: h.likes, videos: h.videos,
+    vistas: suma('vistas'), likes_videos: suma('likes'), comentarios: suma('comentarios'), compartidos: suma('compartidos') };
+}
+// Punto de partida de cada video: su última foto por hora previa o, si no hay, la del día anterior
+function baseVideo(id, fecha) {
+  return (estado.datos.diario || []).filter(x => x.video_id === id && x.fecha < fecha).at(-1) || null;
 }
 
 function tituloDia() {
@@ -57,12 +75,13 @@ function vCrecimientoHoras() {
   if (!filas) return cab + '<div class="spin"></div></section>';
   if (d?.error) return cab + `<p class="vacio">${esc(d.error)}</p></section>`;
   const ini = filas[0] || {}, fin = filas.at(-1) || {};
-  const g = c => (filas.length > 1 ? (+fin[c] || 0) - (+ini[c] || 0) : 0);
+  const g = c => (filas.length > 1 && ini[c] != null ? (+fin[c] || 0) - (+ini[c] || 0) : 0);
   const sg = n => (n > 0 ? '+' : '') + num(n);
   // Ganancia en cada hora (contra la foto anterior)
   const porHora = campo => {
     const out = Array(24).fill(null);
-    filas.forEach((r, i) => { if (r.base || !i) return; out[+r.fecha.slice(11, 13)] = (+r[campo] || 0) - (+filas[i - 1][campo] || 0); });
+    // La primera hora no se compara contra el cierre del día anterior (sumaría todo lo de la noche)
+    filas.forEach((r, i) => { if (r.base || !i || filas[i - 1].aprox || filas[i - 1][campo] == null) return; out[+r.fecha.slice(11, 13)] = (+r[campo] || 0) - (+filas[i - 1][campo] || 0); });
     if (filas.length === 1 && !filas[0].base) out[+filas[0].fecha.slice(11, 13)] = 0;
     return out;
   };
@@ -73,17 +92,17 @@ function vCrecimientoHoras() {
   const porVideo = {};
   for (const r of d.videos || []) (porVideo[r.video_id] ||= []).push(r);
   const tops = Object.entries(porVideo).map(([id, s]) => {
-    const a = s[0], z = s.at(-1), v = estado.datos.videos.find(x => x.video_id === id) || {};
+    const z = s.at(-1), a = s[0].hora.slice(0, 10) < fechaModo() ? s[0] : (baseVideo(id, fechaModo()) || s[0]), v = estado.datos.videos.find(x => x.video_id === id) || {};
     return { id, v, vistas: +z.vistas - +a.vistas, likes: +z.likes - +a.likes, com: +z.comentarios - +a.comentarios, sh: +z.compartidos - +a.compartidos };
   }).filter(x => x.vistas || x.likes || x.com || x.sh).sort((a, b) => b.vistas - a.vistas).slice(0, 8);
   const tabla = [...filas].reverse().map((x, i, arr) => {
     const prev = arr[i + 1];
-    const dl = c => { if (!prev) return '<td>—</td>'; const n = (+x[c] || 0) - (+prev[c] || 0); return `<td class="${n > 0 ? 'up' : n < 0 ? 'down' : ''}">${n > 0 ? '+' : ''}${num(n)}</td>`; };
-    return `<tr><td><b>${x.base ? 'Inicio del día' : x.etiqueta}</b></td><td>${num(x.seguidores)}</td>${dl('seguidores')}<td>${num(x.vistas)}</td>${dl('vistas')}<td>${num(x.likes_videos)}</td>${dl('likes_videos')}<td>${num(x.comentarios)}</td>${dl('comentarios')}<td>${num(x.compartidos)}</td>${dl('compartidos')}</tr>`;
+    const dl = c => { if (!prev || prev[c] == null) return '<td>—</td>'; const n = (+x[c] || 0) - (+prev[c] || 0); return `<td class="${n > 0 ? 'up' : n < 0 ? 'down' : ''}">${n > 0 ? '+' : ''}${num(n)}</td>`; };
+    return `<tr><td><b>${x.base ? (x.aprox ? 'Cierre del ' + fdia(x.fecha.slice(0, 10)) : 'Inicio del día') : x.etiqueta}</b></td><td>${num(x.seguidores)}</td>${dl('seguidores')}<td>${num(x.vistas)}</td>${dl('vistas')}<td>${num(x.likes_videos)}</td>${dl('likes_videos')}<td>${num(x.comentarios)}</td>${dl('comentarios')}<td>${num(x.compartidos)}</td>${dl('compartidos')}</tr>`;
   }).join('');
   return `
     <section class="grid g4">
-      ${kpi('Seguidores ganados', sg(g('seguidores')), `<div class="delta eq">${esc(tituloDia())}</div>`, 'i-users', '#db2777')}
+      ${kpi('Seguidores ganados', sg(g('seguidores')), `<div class="delta eq">${ini.aprox ? 'desde el cierre del ' + fdia(ini.fecha.slice(0, 10)) : esc(tituloDia())}</div>`, 'i-users', '#db2777')}
       ${kpi('Vistas ganadas', sg(g('vistas')), `<div class="delta eq">${pico.v ? `hora pico ${String(pico.h).padStart(2, '0')}:00 (+${num(pico.v)})` : 'en el día'}</div>`, 'i-eye', '#0891b2')}
       ${kpi('Likes ganados', sg(g('likes_videos')), `<div class="delta eq">en los videos</div>`, 'i-heart', '#e11d48')}
       ${kpi('Comentarios y compartidos', sg(g('comentarios') + g('compartidos')), `<div class="delta eq">${horasConFoto} hora(s) con foto</div>`, 'i-msg', '#7c3aed')}
