@@ -32,7 +32,7 @@ function tarjetaCalidad(videos) {
       <div><b>${nota >= 70 ? 'Tu audiencia participa mucho' : nota >= 40 ? 'Participación aceptable, con margen de mejora' : 'La audiencia mira pero participa poco'}</b>
         <p class="sub" style="font-size:12px;margin-top:4px">Promedio de los 6 indicadores frente a una referencia sana de TikTok. ${num(t.l)} likes · ${num(t.c)} comentarios · ${num(t.s)} compartidos.</p></div>
     </div>
-    ${M.map(m => {
+    <div class="cal-lista">${M.map(m => {
       const [et, col, fondo] = estado_(m.tot, m.ref), escala = m.ref * 2, ancho = Math.min(100, m.tot / escala * 100), marca = 50;
       const mejor = conBase.map(x => ({ x, v: m.f(x) })).filter(o => isFinite(o.v)).sort((a, b) => b.v - a.v)[0];
       return `<div class="cal-m">
@@ -42,7 +42,7 @@ function tarjetaCalidad(videos) {
         <p class="cal-tip">💡 ${m.tip}</p>
         ${mejor && mejor.v > 0 ? `<p class="cal-mejor">🏆 Mejor: <a href="#" data-video="${esc(mejor.x.video_id)}">${esc((mejor.x.titulo || 'Video').replace(/\*\*/g, '').slice(0, 46))}</a> <b>${mejor.v.toFixed(1)}</b></p>` : ''}
       </div>`;
-    }).join('')}
+    }).join('')}</div>
   </div>`;
 }
 

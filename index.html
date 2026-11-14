@@ -294,6 +294,8 @@
   /* Calidad de la interacción */
   .cal-top { display: flex; gap: 14px; align-items: center; padding: 4px 0 14px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
   .cal-top .nota-anillo { margin: 0; flex: none; }
+  .cal-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0 28px; }
+  .cal-top { max-width: 720px; }
   .cal-m { padding: 10px 0; border-bottom: 1px solid #f3f4f6; } .cal-m:last-child { border-bottom: 0; }
   .cal-cab { display: flex; align-items: center; gap: 8px; font-size: 13px; } .cal-val { margin-left: auto; font-size: 15px; }
   .cal-et { font-size: 10.5px; font-weight: 700; border-radius: 99px; padding: 1px 8px; }
@@ -940,13 +942,13 @@ document.addEventListener('visibilitychange', () => {
 });
 </script>
 <script src="analisis.js?v=5"></script>
-<script src="estrategia.js?v=6"></script>
+<script src="estrategia.js?v=7"></script>
 <script src="salud.js?v=2"></script>
 <script src="pro.js?v=4"></script>
 <script src="horas.js?v=16"></script>
 <script src="sitios.js?v=3"></script>
 <script src="sitios2.js?v=1"></script>
-<script src="detalle.js?v=1"></script>
+<script src="detalle.js?v=2"></script>
 <script src="rendimiento.js?v=3"></script>
 </body>
 </html>
