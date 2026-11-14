@@ -221,6 +221,9 @@
   .chk div { display: grid; gap: 2px; min-width: 0; flex: 1; } .chk b { font-size: 13px; } .chk small { color: var(--muted); font-size: 12px; }
   .chk em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--primary); background: var(--primary-light); border-radius: 99px; padding: 2px 8px; flex: none; }
   .ficha-acc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  /* Selector de rango */
+  .seg-rango { flex-wrap: wrap; align-items: center; }
+  .rango-dia { border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; font: inherit; font-size: 12px; margin-left: 4px; background: #fff; color: var(--text); }
   /* Indicador «En vivo» */
   .en-vivo { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--ok); background: #ecfdf5; border-radius: 99px; padding: 4px 10px; white-space: nowrap; flex: none; }
   .en-vivo i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: latido 1.8s infinite; }
@@ -326,7 +329,7 @@
     <span class="chip" id="t-entorno">TikTok</span>
     <button class="btn btn-sec" id="btn-csv" style="display:none" title="Descargar los videos con sus métricas (Excel)"><svg class="icon" style="width:15px;height:15px"><use href="#i-bar"/></svg> CSV</button>
     <button class="btn btn-sec" id="btn-print" style="display:none" title="Imprimir o guardar como PDF">Reporte</button>
-    <span class="en-vivo" id="en-vivo" hidden title="Se sincroniza solo con TikTok cada 5 minutos"><i></i><span id="en-vivo-txt">En vivo</span></span>
+    <span class="en-vivo" id="en-vivo" hidden title="Se sincroniza solo con TikTok cada minuto"><i></i><span id="en-vivo-txt">En vivo</span></span>
     <button class="btn btn-primary" id="btn-sync" style="display:none"><svg class="icon" style="width:15px;height:15px"><use href="#i-sync"/></svg> Sincronizar</button>
   </header>
   <main class="content" id="app"><div class="spin"></div></main>
@@ -433,6 +436,7 @@ async function sincronizar(silencioso) {
   try {
     await api('/tiktok/sincronizar', { method: 'POST' });
     estado.datos = await api('/tiktok/resumen?dias=365');
+    if (modoHora() && fechaModo() === hoyLima()) estado.horas[hoyLima()] = await api('/tiktok/horas?fecha=' + hoyLima());
     ultimaAuto = Date.now();
     repintarSeguro();
     if (!silencioso) toast('Métricas actualizadas desde TikTok');
@@ -445,7 +449,7 @@ async function sincronizar(silencioso) {
    Cada 5 minutos (con la pestaña visible) trae lo último de TikTok y repinta.
    No repinta mientras escribes en un campo: espera a que salgas de él.
    Conserva la posición de la página. */
-const AUTO_MIN = 5;
+const AUTO_MIN = 1;
 function escribiendo() {
   const a = document.activeElement;
   return a && a.closest('#app') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
@@ -463,16 +467,16 @@ function marcarEnVivo() {
   if (!el || !estado.datos?.cuenta) return;
   el.hidden = false;
   const ref = ultimaAuto || new Date(estado.datos.cuenta.ultima_sync || Date.now()).getTime();
-  const min = Math.floor((Date.now() - ref) / 60000);
-  $('en-vivo-txt').textContent = sincronizando ? 'Actualizando…' : 'En vivo · ' + (min < 1 ? 'ahora' : 'hace ' + min + ' min');
+  const seg = Math.max(0, Math.floor((Date.now() - ref) / 1000));
+  $('en-vivo-txt').textContent = sincronizando ? 'Actualizando…' : 'En vivo · ' + (seg < 10 ? 'ahora' : seg < 60 ? 'hace ' + seg + ' s' : 'hace ' + Math.floor(seg / 60) + ' min');
   el.classList.toggle('activo', sincronizando);
 }
 function autoActualizar() {
   if (document.hidden || !estado.datos?.cuenta) return;
   if (Date.now() - ultimaAuto >= AUTO_MIN * 60000 - 2000) sincronizar(true);
 }
-setInterval(autoActualizar, 30000);
-setInterval(marcarEnVivo, 30000);
+setInterval(autoActualizar, 10000);
+setInterval(marcarEnVivo, 10000);
 async function desconectar(id) {
   if (!confirm('¿Desconectar la cuenta de TikTok? Se revocará el acceso y se borrarán sus métricas guardadas.')) return;
   try { await api('/tiktok/cuenta/' + id, { method: 'DELETE' }); toast('Cuenta desconectada'); location.hash = 'resumen'; cargar(); }
@@ -599,9 +603,11 @@ function hallazgos() {
 }
 
 function selectorRango() {
-  return `<span class="seg" id="rango">${[7, 30, 90, 365].map(d => `<button data-d="${d}" class="${estado.rango === d ? 'on' : ''}">${d === 365 ? '1 año' : d + ' d'}</button>`).join('')}</span>`;
+  const ops = [['hoy', 'Hoy'], ['dia', 'Día'], [7, '7 días'], [30, '30 días'], [90, '90 días'], [365, 'Año']];
+  return `<span class="seg seg-rango" id="rango">${ops.map(([d, t]) => `<button data-d="${d}" class="${estado.rango === d ? 'on' : ''}">${t}</button>`).join('')}${estado.rango === 'dia' ? `<input type="date" id="rango-dia" class="rango-dia" value="${estado.dia || hoyLima()}" max="${hoyLima()}">` : ''}</span>`;
 }
 function historialRango() {
+  if (modoHora()) return filasHora() || [];
   const corte = new Date(); corte.setDate(corte.getDate() - estado.rango);
   return estado.datos.historial.filter(x => new Date(x.fecha + 'T12:00:00') >= corte);
 }
@@ -609,7 +615,9 @@ function historialRango() {
 // valor en cada punto, fechas en el eje, detalle al pasar el mouse y resumen del periodo.
 function grafico(campos) {
   const h = historialRango();
-  if (h.length < 2) return '<p class="vacio">El gráfico aparece desde el segundo día de datos: las métricas se guardan una vez al día.</p>';
+  if (h.length < 2) return modoHora()
+    ? `<p class="vacio">${estado.horas[fechaModo()] ? 'El gráfico por hora aparece cuando hay al menos 2 fotos de este día. Se guarda una por hora (y cada minuto con el panel abierto).' : 'Cargando horas…'}</p>`
+    : '<p class="vacio">El gráfico aparece desde el segundo día de datos: las métricas se guardan una vez al día.</p>';
   const colores = { seguidores: '#db2777', likes: '#f97316', videos: '#4f46e5', seguidos: '#0891b2' };
   const nombre = c => c[0].toUpperCase() + c.slice(1);
   const W = 720, H = 300, IZQ = 50, DER = 50, ARR = 44, ABA = 40;
@@ -640,28 +648,29 @@ function grafico(campos) {
       <path d="${d}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>
       ${pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#fff" stroke="${col}" stroke-width="2"/>`).join('')}${etiquetas}`;
   }).join('');
-  const fechas = h.map((r, i) => conEtiqueta(i) ? `<text x="${x(i)}" y="${H - ABA + 18}" font-size="10.5" fill="#9ca3af" text-anchor="${i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'}">${fdia(r.fecha)}</text>` : '').join('');
+  const fechas = h.map((r, i) => conEtiqueta(i) ? `<text x="${x(i)}" y="${H - ABA + 18}" font-size="10.5" fill="#9ca3af" text-anchor="${i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'}">${etq(r)}</text>` : '').join('');
   // Franjas invisibles por día: al pasar el mouse muestran todos los valores y el cambio vs. el día anterior
   const zonas = h.map((r, i) => {
     const ancho = (W - IZQ - DER) / (n - 1), x0 = Math.max(IZQ, x(i) - ancho / 2);
     const det = escalas.map(e => { const dlt = i ? e.vals[i] - e.vals[i - 1] : 0; return `${nombre(e.c)}: ${num(e.vals[i])}${i ? ` (${dlt >= 0 ? '+' : ''}${num(dlt)})` : ''}`; }).join('\n');
-    return `<rect class="g-zona" x="${x0}" y="${ARR - 10}" width="${Math.min(ancho, W - DER - x0)}" height="${altoUtil + 10}"><title>${fdia(r.fecha)}\n${det}</title></rect>`;
+    return `<rect class="g-zona" x="${x0}" y="${ARR - 10}" width="${Math.min(ancho, W - DER - x0)}" height="${altoUtil + 10}"><title>${etq(r)}\n${det}</title></rect>`;
   }).join('');
   const leyenda = escalas.map((e, k) => `<circle cx="${IZQ + 4 + k * 190}" cy="14" r="4" fill="${colores[e.c]}"/><text x="${IZQ + 13 + k * 190}" y="18" font-size="11.5" font-weight="700" fill="#111827">${nombre(e.c)} ${num(e.vals.at(-1))}${k < 2 ? ` <tspan font-weight="500" fill="#9ca3af">(eje ${k ? 'der.' : 'izq.'})</tspan>` : ''}</text>`).join('');
   const resumen = escalas.map(e => {
     const a = e.vals[0], z = e.vals.at(-1), dlt = z - a, dias = Math.max(1, n - 1);
-    const mejor = e.vals.slice(1).map((v, i) => [v - e.vals[i], h[i + 1].fecha]).sort((p, q) => q[0] - p[0])[0];
+    const mejor = e.vals.slice(1).map((v, i) => [v - e.vals[i], etq(h[i + 1])]).sort((p, q) => q[0] - p[0])[0];
     return `<div class="g-res" style="--c:${colores[e.c]}"><b>${nombre(e.c)}</b>
       <span>Inicio <strong>${num(a)}</strong></span><span>Actual <strong>${num(z)}</strong></span>
       <span>Cambio <strong class="${dlt > 0 ? 'up' : dlt < 0 ? 'down' : ''}">${dlt > 0 ? '+' : ''}${num(dlt)}${a ? ` (${dlt >= 0 ? '+' : ''}${(dlt / a * 100).toFixed(1)} %)` : ''}</strong></span>
-      <span>Por día <strong>${(dlt / dias).toFixed(1)}</strong></span>
-      ${mejor && mejor[0] > 0 ? `<span>Mejor día <strong>+${num(mejor[0])} · ${fdia(mejor[1])}</strong></span>` : ''}</div>`;
+      <span>${modoHora() ? 'Por hora' : 'Por día'} <strong>${(dlt / dias).toFixed(1)}</strong></span>
+      ${mejor && mejor[0] > 0 ? `<span>${modoHora() ? 'Mejor hora' : 'Mejor día'} <strong>+${num(mejor[0])} · ${mejor[1]}</strong></span>` : ''}</div>`;
   }).join('');
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Evolución" class="g-svg">${guias}${series}${fechas}${leyenda}${zonas}</svg>
     <div class="g-resumen">${resumen}</div>`;
 }
 
 function vCrecimiento() {
+  if (modoHora()) return vCrecimientoHoras();
   const h = historialRango(), m = metricas();
   const filas = [...h].reverse().map((x, i, arr) => {
     const prev = arr[i + 1];
@@ -786,7 +795,13 @@ function enlazar() {
   $('btn-conectar')?.addEventListener('click', e => conectar(e.currentTarget));
   $('btn-reconectar')?.addEventListener('click', e => conectar(e.currentTarget));
   $('btn-desconectar')?.addEventListener('click', e => desconectar(e.currentTarget.dataset.id));
-  document.querySelectorAll('#rango button').forEach(b => b.onclick = () => { estado.rango = +b.dataset.d; pintar(); });
+  document.querySelectorAll('#rango button').forEach(b => b.onclick = () => {
+    const d = b.dataset.d; estado.rango = isNaN(+d) ? d : +d;
+    if (d === 'dia' && !estado.dia) estado.dia = new Date(Date.now() - 29 * 36e5).toISOString().slice(0, 10); // ayer (Lima)
+    pintar();
+  });
+  const rd = $('rango-dia');
+  if (rd) rd.onchange = () => { if (rd.value) { estado.dia = rd.value; rd.blur(); pintar(); } };
   document.querySelectorAll('th[data-k]').forEach(th => th.onclick = () => { estado.orden = th.dataset.k; pintar(); });
   const bus = $('buscar');
   if (bus) bus.oninput = () => { estado.buscar = bus.value; const pos = bus.selectionStart; pintar(); const n = $('buscar'); n.focus(); n.setSelectionRange(pos, pos); };
@@ -804,5 +819,6 @@ document.addEventListener('visibilitychange', () => {
 <script src="estrategia.js?v=2"></script>
 <script src="salud.js?v=1"></script>
 <script src="pro.js?v=2"></script>
+<script src="horas.js?v=1"></script>
 </body>
 </html>
