@@ -107,8 +107,18 @@ function vCrecimientoHoras() {
     const z = s.at(-1), v = estado.datos.videos.find(x => x.video_id === id) || {};
     const a = s[0].hora.slice(0, 10) < fechaModo() ? s[0]
       : (s[0].vistas_ini != null ? { vistas: s[0].vistas_ini, likes: s[0].likes_ini, comentarios: s[0].comentarios_ini, compartidos: s[0].compartidos_ini } : s[0]);
-    return { id, v, vistas: +z.vistas - +a.vistas, likes: +z.likes - +a.likes, com: +z.comentarios - +a.comentarios, sh: +z.compartidos - +a.compartidos };
-  }).filter(x => x.vistas || x.likes || x.com || x.sh).sort((a, b) => b.vistas - a.vistas).slice(0, 8);
+    // Ganancia de cada hora del video: contra su foto de la hora anterior o, si no hay, dentro de la misma hora
+    const horas = Array(24).fill(null);
+    s.forEach((r, i) => {
+      if (r.hora.slice(0, 10) !== fechaModo()) return;
+      const h = +r.hora.slice(11, 13), p = s[i - 1];
+      const ph = p ? (p.hora.slice(0, 10) < fechaModo() ? -1 : +p.hora.slice(11, 13)) : null;
+      const ref = p && ph === h - 1 ? p : (r.vistas_ini != null ? { vistas: r.vistas_ini, likes: r.likes_ini, comentarios: r.comentarios_ini, compartidos: r.compartidos_ini } : null);
+      horas[h] = ref ? { v: +r.vistas - +ref.vistas, l: +r.likes - +ref.likes, c: +r.comentarios - +ref.comentarios, s: +r.compartidos - +ref.compartidos } : { v: 0, l: 0, c: 0, s: 0 };
+    });
+    const pico = horas.reduce((m, x, h) => (x && x.v > (m.v ?? 0) ? { h, v: x.v } : m), {});
+    return { id, v, horas, pico, vistas: +z.vistas - +a.vistas, likes: +z.likes - +a.likes, com: +z.comentarios - +a.comentarios, sh: +z.compartidos - +a.compartidos };
+  }).filter(x => x.vistas || x.likes || x.com || x.sh).sort((a, b) => b.vistas - a.vistas).slice(0, 10);
   const tabla = [...filas].reverse().map((x, i, arr) => {
     const prev = arr[i + 1];
     const dl = c => { if (!prev || prev[c] == null) return '<td>—</td>'; const n = (+x[c] || 0) - (+prev[c] || 0); return `<td class="${n > 0 ? 'up' : n < 0 ? 'down' : ''}">${n > 0 ? '+' : ''}${num(n)}</td>`; };
@@ -129,8 +139,21 @@ function vCrecimientoHoras() {
         <p class="sub"><span style="color:#db2777">■</span> seguidores · <span style="color:#f97316">■</span> likes de los videos</p></div>
     </section>
     <section class="card panel" style="margin-bottom:16px"><div class="sec-title">Videos que más crecieron · ${esc(tituloDia())}</div>
-      ${tops.length ? `<div class="scroll"><table><thead><tr><th>Video</th><th>Vistas</th><th>Likes</th><th>Coment.</th><th>Compart.</th></tr></thead><tbody>
-        ${tops.map(x => `<tr><td><a href="#" data-video="${esc(x.id)}">${esc((x.v.titulo || 'Video').replace(/\*\*/g, '').slice(0, 60))}</a></td><td class="up">+${num(x.vistas)}</td><td>${sg(x.likes)}</td><td>${sg(x.com)}</td><td>${sg(x.sh)}</td></tr>`).join('')}
+      ${tops.length ? `<p class="sub" style="font-size:12px;margin:-4px 0 10px">Toca una fila para ver el detalle hora por hora.</p>
+      <div class="scroll"><table class="vh-tabla"><thead><tr><th>Video</th><th>Vistas</th><th>Likes</th><th>Coment.</th><th>Compart.</th><th>Hora pico</th><th style="min-width:150px">Vistas por hora (00h–23h)</th></tr></thead><tbody>
+        ${tops.map(x => {
+          const abierto = vidAbiertos.has(x.id);
+          const conDatos = x.horas.map((o, h) => [h, o]).filter(([, o]) => o);
+          return `<tr class="vh-fila ${abierto ? 'abierta' : ''}" data-exp="${esc(x.id)}">
+            <td><div class="vh-vid">${x.v.portada ? `<img src="${esc(x.v.portada)}" alt="">` : ''}<div><a href="#" data-video="${esc(x.id)}">${esc((x.v.titulo || 'Video').replace(/\*\*/g, '').slice(0, 55))}</a>
+              <small>${x.v.publicado_en ? 'Publicado ' + new Date(x.v.publicado_en).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' }) : ''}${x.v.vistas != null ? ' · ' + num(+x.v.vistas) + ' vistas en total' : ''}</small></div><span class="vh-flecha">${abierto ? '▾' : '▸'}</span></div></td>
+            <td class="up">+${num(x.vistas)}</td><td>${sg(x.likes)}</td><td>${sg(x.com)}</td><td>${sg(x.sh)}</td>
+            <td>${x.pico.v ? `<b>${String(x.pico.h).padStart(2, '0')}:00</b><br><small class="sub">+${num(x.pico.v)}</small>` : '—'}</td>
+            <td>${miniHoras(x.horas)}</td></tr>
+            ${abierto ? `<tr class="vh-det"><td colspan="7">${conDatos.length ? `<div class="vh-grid">${conDatos.map(([h, o]) => `<div class="${o.v ? 'si' : ''}"><b>${String(h).padStart(2, '0')}:00</b>
+                <span>👁 ${o.v > 0 ? '+' : ''}${num(o.v)}</span><span>❤ ${o.l > 0 ? '+' : ''}${num(o.l)}</span><span>💬 ${o.c > 0 ? '+' : ''}${num(o.c)}</span><span>↗ ${o.s > 0 ? '+' : ''}${num(o.s)}</span></div>`).join('')}</div>`
+              : '<span class="sub">Aún sin fotos por hora de este video en el día.</span>'}</td></tr>` : ''}`;
+        }).join('')}
       </tbody></table></div>` : '<p class="vacio">Sin cambios registrados en los videos este día.</p>'}
     </section>
     <section class="card panel"><div class="sec-title">Registro por hora <small>${horasConFoto} foto(s) · se guarda una por hora</small></div>
@@ -138,3 +161,21 @@ function vCrecimientoHoras() {
         : '<p class="vacio">Aún no hay fotos por hora de este día. Se guardan desde ahora: una por hora (y cada minuto mientras el panel está abierto).</p>'}
     </section>`;
 }
+
+// Mini gráfico de 24 barras (vistas ganadas por hora de un video)
+const vidAbiertos = new Set();
+function miniHoras(horas) {
+  const max = Math.max(1, ...horas.map(o => (o ? o.v : 0)));
+  return `<svg viewBox="0 0 144 30" width="144" height="30" class="vh-mini">${horas.map((o, h) => {
+    const alto = o && o.v > 0 ? Math.max(2, o.v / max * 26) : (o ? 1.5 : 0);
+    return `<rect x="${h * 6}" y="${28 - alto}" width="4.6" height="${alto || 1}" rx="1" fill="${o ? (o.v > 0 ? '#0891b2' : '#cbd5e1') : '#f1f5f9'}"><title>${String(h).padStart(2, '0')}:00 · ${o ? (o.v > 0 ? '+' : '') + num(o.v) + ' vistas' : 'sin foto'}</title></rect>`;
+  }).join('')}<line x1="0" x2="144" y1="28.5" y2="28.5" stroke="#e5e7eb"/></svg>`;
+}
+// Abrir / cerrar el detalle por hora de un video (sin abrir la ficha si se toca el título)
+document.addEventListener('click', e => {
+  const fila = e.target.closest('[data-exp]');
+  if (!fila || e.target.closest('[data-video]')) return;
+  const id = fila.dataset.exp;
+  vidAbiertos.has(id) ? vidAbiertos.delete(id) : vidAbiertos.add(id);
+  repintarSeguro();
+});
