@@ -25,7 +25,8 @@
   .sidebar__brand { display: flex; align-items: center; gap: 10px; padding: 22px 22px 18px; color: #fff; font-weight: 700; font-size: 18px; }
   .sidebar__brand img { width: 34px; height: 34px; border-radius: 8px; object-fit: contain; }
   .sidebar__brand small { display: block; font-size: 11px; font-weight: 400; color: var(--sidebar-text); letter-spacing: .5px; }
-  .sidebar nav { flex: 1; overflow-y: auto; padding: 8px 12px; }
+  .sidebar nav { flex: 1; overflow-y: auto; padding: 8px 12px; scrollbar-width: none; -ms-overflow-style: none; }
+  .sidebar nav::-webkit-scrollbar { display: none; }
   .nav-label { color: #4b5563; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; font-weight: 600; padding: 12px 12px 5px; }
   .nav-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 12px; border-radius: 9px; color: var(--sidebar-text); font-size: 13.5px; font-weight: 500; text-align: left; margin-bottom: 2px; }
   .nav-item:hover { background: var(--sidebar-hover); color: #fff; }
@@ -220,6 +221,12 @@
   .chk div { display: grid; gap: 2px; min-width: 0; flex: 1; } .chk b { font-size: 13px; } .chk small { color: var(--muted); font-size: 12px; }
   .chk em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--primary); background: var(--primary-light); border-radius: 99px; padding: 2px 8px; flex: none; }
   .ficha-acc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  /* Gráfico detallado */
+  .g-zona { fill: transparent; cursor: crosshair; } .g-zona:hover { fill: rgba(17,24,39,.04); }
+  .g-resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-top: 10px; }
+  .g-res { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; padding: 10px 12px; border-radius: 10px; background: #fafafa; border-left: 3px solid var(--c); font-size: 12px; color: var(--muted); }
+  .g-res b { color: var(--c); width: 100%; font-size: 12.5px; } .g-res strong { color: var(--text); }
+  .g-res .up { color: var(--ok); } .g-res .down { color: #dc2626; }
   /* Anti-desborde: ningún bloque puede ser más ancho que su contenedor */
   .main, .content, .card, .grid > *, .sim > label { min-width: 0; }
   .sim select { width: 100%; min-width: 0; max-width: 100%; text-overflow: ellipsis; }
@@ -552,25 +559,60 @@ function historialRango() {
   const corte = new Date(); corte.setDate(corte.getDate() - estado.rango);
   return estado.datos.historial.filter(x => new Date(x.fecha + 'T12:00:00') >= corte);
 }
-// Gráfico de líneas en SVG; cada serie con su propia escala
+// Gráfico de líneas en SVG con números: cada serie con su propia escala (izquierda / derecha),
+// valor en cada punto, fechas en el eje, detalle al pasar el mouse y resumen del periodo.
 function grafico(campos) {
   const h = historialRango();
   if (h.length < 2) return '<p class="vacio">El gráfico aparece desde el segundo día de datos: las métricas se guardan una vez al día.</p>';
   const colores = { seguidores: '#db2777', likes: '#f97316', videos: '#4f46e5', seguidos: '#0891b2' };
-  const W = 680, H = 230, P = 34;
-  const serie = (campo, color) => {
-    const vals = h.map(x => Number(x[campo]) || 0), min = Math.min(...vals), max = Math.max(...vals), r = max - min || 1;
-    const pts = vals.map((val, i) => [P + i * (W - 2 * P) / (vals.length - 1), H - P - (val - min) / r * (H - 2 * P - 18)]);
+  const nombre = c => c[0].toUpperCase() + c.slice(1);
+  const W = 720, H = 300, IZQ = 50, DER = 50, ARR = 44, ABA = 40;
+  const n = h.length, x = i => IZQ + i * (W - IZQ - DER) / (n - 1), altoUtil = H - ARR - ABA;
+  const paso = Math.max(1, Math.ceil(n / 10));                     // cuántos puntos llevan número/fecha
+  const conEtiqueta = i => i === n - 1 || (i % paso === 0 && n - 1 - i >= paso * 0.7);
+  const escalas = campos.map(c => {
+    const vals = h.map(r => Number(r[c]) || 0);
+    let min = Math.min(...vals), max = Math.max(...vals);
+    if (min === max) { min = Math.max(0, min - 1); max = max + 1; }
+    return { c, vals, min, max, y: v => ARR + 14 + (1 - (v - min) / (max - min)) * (altoUtil - 28) };
+  });
+  const guias = [0, .25, .5, .75, 1].map(t => {
+    const yy = ARR + t * altoUtil;
+    return `<line x1="${IZQ}" x2="${W - DER}" y1="${yy}" y2="${yy}" stroke="#f0f0f3"/>` +
+      escalas.slice(0, 2).map((e, k) => `<text x="${k ? W - DER + 6 : IZQ - 6}" y="${yy + 4}" font-size="10" fill="${colores[e.c]}" text-anchor="${k ? 'start' : 'end'}" opacity=".8">${num(Math.round(e.max - (t * altoUtil - 14) / (altoUtil - 28) * (e.max - e.min)))}</text>`).join('');
+  }).join('');
+  const series = escalas.map((e, k) => {
+    const col = colores[e.c], pts = e.vals.map((v, i) => [x(i), e.y(v)]);
     const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
-    return `<path d="${d} L ${pts.at(-1)[0]} ${H - P} L ${P} ${H - P} Z" fill="${color}" opacity=".07"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round"/><circle cx="${pts.at(-1)[0]}" cy="${pts.at(-1)[1]}" r="4" fill="${color}"/>`;
-  };
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Evolución">
-    ${[0, .5, 1].map(t => `<line x1="${P}" x2="${W - P}" y1="${P + 18 + t * (H - 2 * P - 18)}" y2="${P + 18 + t * (H - 2 * P - 18)}" stroke="#f0f0f3"/>`).join('')}
-    ${campos.map(c => serie(c, colores[c])).join('')}
-    <text x="${P}" y="${H - 10}" font-size="11" fill="#9ca3af">${fdia(h[0].fecha)}</text>
-    <text x="${W - P}" y="${H - 10}" font-size="11" fill="#9ca3af" text-anchor="end">${fdia(h.at(-1).fecha)}</text>
-    ${campos.map((c, i) => `<circle cx="${P + 4 + i * 170}" cy="12" r="4" fill="${colores[c]}"/><text x="${P + 13 + i * 170}" y="16" font-size="11.5" font-weight="700" fill="#111827">${c[0].toUpperCase() + c.slice(1)} ${num(h.at(-1)[c])}</text>`).join('')}
-  </svg>`;
+    const etiquetas = pts.map((p, i) => {
+      if (!conEtiqueta(i)) return '';
+      const yo = p[1], otro = escalas.length > 1 ? escalas[1 - Math.min(k, 1)] : null, yOtro = otro && otro !== e ? otro.y(otro.vals[i]) : -1e9;
+      const abajo = yo > yOtro || (yo === yOtro && k === 1), dy = abajo ? 17 : -10, anc = i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle';
+      return `<text x="${p[0]}" y="${p[1] + dy}" font-size="11" font-weight="700" fill="${col}" text-anchor="${anc}" paint-order="stroke" stroke="#fff" stroke-width="3">${num(e.vals[i])}</text>`;
+    }).join('');
+    return `<path d="${d} L ${pts.at(-1)[0]} ${H - ABA} L ${IZQ} ${H - ABA} Z" fill="${col}" opacity=".07"/>
+      <path d="${d}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>
+      ${pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#fff" stroke="${col}" stroke-width="2"/>`).join('')}${etiquetas}`;
+  }).join('');
+  const fechas = h.map((r, i) => conEtiqueta(i) ? `<text x="${x(i)}" y="${H - ABA + 18}" font-size="10.5" fill="#9ca3af" text-anchor="${i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'}">${fdia(r.fecha)}</text>` : '').join('');
+  // Franjas invisibles por día: al pasar el mouse muestran todos los valores y el cambio vs. el día anterior
+  const zonas = h.map((r, i) => {
+    const ancho = (W - IZQ - DER) / (n - 1), x0 = Math.max(IZQ, x(i) - ancho / 2);
+    const det = escalas.map(e => { const dlt = i ? e.vals[i] - e.vals[i - 1] : 0; return `${nombre(e.c)}: ${num(e.vals[i])}${i ? ` (${dlt >= 0 ? '+' : ''}${num(dlt)})` : ''}`; }).join('\n');
+    return `<rect class="g-zona" x="${x0}" y="${ARR - 10}" width="${Math.min(ancho, W - DER - x0)}" height="${altoUtil + 10}"><title>${fdia(r.fecha)}\n${det}</title></rect>`;
+  }).join('');
+  const leyenda = escalas.map((e, k) => `<circle cx="${IZQ + 4 + k * 190}" cy="14" r="4" fill="${colores[e.c]}"/><text x="${IZQ + 13 + k * 190}" y="18" font-size="11.5" font-weight="700" fill="#111827">${nombre(e.c)} ${num(e.vals.at(-1))}${k < 2 ? ` <tspan font-weight="500" fill="#9ca3af">(eje ${k ? 'der.' : 'izq.'})</tspan>` : ''}</text>`).join('');
+  const resumen = escalas.map(e => {
+    const a = e.vals[0], z = e.vals.at(-1), dlt = z - a, dias = Math.max(1, n - 1);
+    const mejor = e.vals.slice(1).map((v, i) => [v - e.vals[i], h[i + 1].fecha]).sort((p, q) => q[0] - p[0])[0];
+    return `<div class="g-res" style="--c:${colores[e.c]}"><b>${nombre(e.c)}</b>
+      <span>Inicio <strong>${num(a)}</strong></span><span>Actual <strong>${num(z)}</strong></span>
+      <span>Cambio <strong class="${dlt > 0 ? 'up' : dlt < 0 ? 'down' : ''}">${dlt > 0 ? '+' : ''}${num(dlt)}${a ? ` (${dlt >= 0 ? '+' : ''}${(dlt / a * 100).toFixed(1)} %)` : ''}</strong></span>
+      <span>Por día <strong>${(dlt / dias).toFixed(1)}</strong></span>
+      ${mejor && mejor[0] > 0 ? `<span>Mejor día <strong>+${num(mejor[0])} · ${fdia(mejor[1])}</strong></span>` : ''}</div>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Evolución" class="g-svg">${guias}${series}${fechas}${leyenda}${zonas}</svg>
+    <div class="g-resumen">${resumen}</div>`;
 }
 
 function vCrecimiento() {
