@@ -135,7 +135,7 @@ function vCrecimientoHoras() {
   orden('vistas').forEach((x, i) => { x.puesto = i + 1; });
   // Los empates de la hora anterior se ordenan como ahora: así solo cuenta como subida/bajada un adelantamiento real
   [...todos].sort((a, b) => b.vistasPrev - a.vistasPrev || a.puesto - b.puesto).forEach((x, i) => { x.puestoPrev = i + 1; });
-  const tops = todos.filter(x => x.vistas || x.likes || x.com || x.sh).sort((a, b) => a.puesto - b.puesto).slice(0, 10);
+  const tops = [...todos].sort((a, b) => a.puesto - b.puesto); // todos los videos, desplazables dentro del recuadro
   const cambioPuesto = x => {
     const dif = x.puestoPrev - x.puesto;
     const t = dif > 0 ? `Subió ${dif} puesto(s): estaba #${x.puestoPrev} a ${refTxt}`
@@ -162,9 +162,9 @@ function vCrecimientoHoras() {
       <div class="card panel"><div class="sec-title">Seguidores y likes por hora</div>${barras24(segH, '#db2777', ' seguidores')}${barras24(likesH, '#f97316', ' likes')}
         <p class="sub"><span style="color:#db2777">■</span> seguidores · <span style="color:#f97316">■</span> likes de los videos</p></div>
     </section>
-    <section class="card panel" style="margin-bottom:16px"><div class="sec-title">Videos que más crecieron · ${esc(tituloDia())}</div>
+    <section class="card panel" style="margin-bottom:16px"><div class="sec-title">Videos que más crecieron · ${esc(tituloDia())} <small>${tops.length} videos</small></div>
       ${tops.length ? `<p class="sub" style="font-size:12px;margin:-4px 0 10px">Toca una fila para ver el detalle hora por hora. El puesto se compara con el orden que había a ${refTxt}: <b style="color:var(--ok)">▲ sube</b> · <b style="color:#dc2626">▼ baja</b> · <b style="color:#ea580c">= se mantiene</b>.</p>
-      <div class="scroll"><table class="vh-tabla"><thead><tr><th title="Comparado con el cierre de la hora anterior">Puesto</th><th>Video</th><th>Vistas</th><th>Likes</th><th>Coment.</th><th>Compart.</th><th>Hora pico</th><th style="min-width:150px">Vistas por hora (00h–23h)</th></tr></thead><tbody>
+      <div class="scroll vh-scroll"><table class="vh-tabla"><thead><tr><th title="Comparado con el cierre de la hora anterior">Puesto</th><th>Video</th><th>Vistas</th><th>Likes</th><th>Coment.</th><th>Compart.</th><th>Hora pico</th><th style="min-width:150px">Vistas por hora (00h–23h)</th></tr></thead><tbody>
         ${tops.map(x => {
           const abierto = vidAbiertos.has(x.id);
           const conDatos = x.horas.map((o, h) => [h, o]).filter(([, o]) => o);
