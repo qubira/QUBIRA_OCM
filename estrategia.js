@@ -99,13 +99,7 @@ function vEstrategia() {
     </section>
 
     <section class="grid g21">
-      <div class="card panel"><div class="sec-title">Duración vs. vistas <small>escala logarítmica · r = ${rDur.toFixed(2)}</small></div>
-        ${pts.length >= 3 ? `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Dispersión de duración contra vistas">
-          ${[0, .5, 1].map(k => `<line x1="${P}" x2="${W - P}" y1="${P + k * (H - 2 * P)}" y2="${P + k * (H - 2 * P)}" stroke="#f0f0f3"/>`).join('')}
-          ${pts.map(p => `<circle cx="${sx(p.x).toFixed(1)}" cy="${sy(p.y).toFixed(1)}" r="6" fill="#db2777" fill-opacity=".55" stroke="#db2777" data-video="${esc(p.id)}" style="cursor:pointer"><title>${esc((p.t || '').slice(0, 60))} · ${p.x} s · ${num(p.y)} vistas</title></circle>`).join('')}
-          <text x="${P}" y="${H - 10}" font-size="11" fill="#9ca3af">0 s</text><text x="${W - P}" y="${H - 10}" font-size="11" fill="#9ca3af" text-anchor="end">${maxX} s</text>
-          <text x="6" y="${P + 4}" font-size="11" fill="#9ca3af">${corto(10 ** maxY)}</text>
-        </svg>` : '<p class="vacio">Faltan duraciones para el gráfico.</p>'}</div>
+      ${graficoDuracion(v)}
       <div class="card panel"><div class="sec-title">Calidad de la interacción</div>
         ${calidad.map(([n, d, val, ref]) => `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:13px"><b>${n}</b><b>${val.toFixed(1)}</b></div>
           <div class="track" style="margin:6px 0"><div class="fill" style="width:${Math.min(100, val / ref * 100)}%;--c:${val >= ref * 0.6 ? '#059669' : val >= ref * 0.3 ? '#d97706' : '#dc2626'}"></div></div>
@@ -262,4 +256,63 @@ function vComparador() {
 }
 function enlazarComparador() {
   document.querySelectorAll('.comp-sel').forEach(s => s.onchange = () => { comparar[+s.dataset.i] = s.value; comparar = comparar.filter((x, i, a) => x && a.indexOf(x) === i); pintar(); });
+}
+
+/* ─── Duración vs. vistas (detallado) ─────────────────────────────────────── */
+function graficoDuracion(v) {
+  const pts = v.filter(x => +x.duracion).map(x => {
+    const inter = +x.likes + +x.comentarios + +x.compartidos;
+    return { x: +x.duracion, y: +x.vistas, t: (x.titulo || 'Sin título').replace(/\*\*/g, ''), id: x.video_id, inter, tasa: +x.vistas ? inter / +x.vistas * 100 : 0, fecha: x.publicado_en };
+  });
+  const cab = '<div class="card panel"><div class="sec-title">Duración vs. vistas</div>';
+  if (pts.length < 3) return cab + '<p class="vacio">Faltan duraciones para el gráfico.</p></div>';
+  const med = mediana(pts.map(p => p.y)) || 1;
+  const W = 640, H = 300, IZQ = 52, DER = 14, ARR = 16, ABA = 40;
+  // Eje X: cada 10 s (o 15/30 s en videos largos)
+  const maxXr = Math.max(...pts.map(p => p.x)), pasoX = maxXr > 180 ? 30 : maxXr > 90 ? 15 : 10;
+  const maxX = Math.ceil((maxXr + 1) / pasoX) * pasoX;
+  // Eje Y logarítmico con marcas 1-2-5
+  const ys = pts.map(p => Math.max(1, p.y)), lo = Math.max(1, Math.min(...ys) / 1.6), hi = Math.max(...ys) * 1.4;
+  const marcas = [];
+  for (let e = 0; e <= 7; e++) for (const m of [1, 2, 5]) { const val = m * 10 ** e; if (val >= lo && val <= hi) marcas.push(val); }
+  const L = Math.log10;
+  const sx = x => IZQ + x / maxX * (W - IZQ - DER);
+  const sy = y => ARR + (1 - (L(Math.max(1, y)) - L(lo)) / (L(hi) - L(lo))) * (H - ARR - ABA);
+  // Tendencia: regresión lineal sobre log(vistas)
+  const n = pts.length, mx = pts.reduce((a, p) => a + p.x, 0) / n, my = pts.reduce((a, p) => a + L(Math.max(1, p.y)), 0) / n;
+  const b = pts.reduce((a, p) => a + (p.x - mx) * (L(Math.max(1, p.y)) - my), 0) / (pts.reduce((a, p) => a + (p.x - mx) ** 2, 0) || 1);
+  const yT = x => 10 ** (my + b * (x - mx));
+  const r = pearson(pts.map(p => p.x), pts.map(p => L(p.y + 1)));
+  const maxInter = Math.max(1, ...pts.map(p => p.inter));
+  const fuerzaR = Math.abs(r) < 0.2 ? 'casi no influye' : Math.abs(r) < 0.5 ? (r > 0 ? 'influye un poco: los más largos tienden a tener más vistas' : 'influye un poco: los más cortos tienden a tener más vistas') : (r > 0 ? 'influye bastante: los más largos consiguen más vistas' : 'influye bastante: los más cortos consiguen más vistas');
+  const svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Duración contra vistas" class="g-svg">
+    ${marcas.map(m => `<line x1="${IZQ}" x2="${W - DER}" y1="${sy(m)}" y2="${sy(m)}" stroke="#f1f5f9"/><text x="${IZQ - 6}" y="${sy(m) + 3.5}" font-size="10" fill="#9ca3af" text-anchor="end">${num(m)}</text>`).join('')}
+    ${Array.from({ length: maxX / pasoX + 1 }, (_, i) => i * pasoX).map(xv => `<line x1="${sx(xv)}" x2="${sx(xv)}" y1="${ARR}" y2="${H - ABA}" stroke="#f8fafc"/><text x="${sx(xv)}" y="${H - ABA + 16}" font-size="10" fill="#6b7280" text-anchor="middle">${xv} s</text>`).join('')}
+    <line x1="${IZQ}" x2="${W - DER}" y1="${H - ABA}" y2="${H - ABA}" stroke="#e5e7eb"/><line x1="${IZQ}" x2="${IZQ}" y1="${ARR}" y2="${H - ABA}" stroke="#e5e7eb"/>
+    <text x="${(IZQ + W - DER) / 2}" y="${H - 6}" font-size="10.5" fill="#6b7280" text-anchor="middle" font-weight="600">Duración del video</text>
+    <text x="12" y="${(ARR + H - ABA) / 2}" font-size="10.5" fill="#6b7280" text-anchor="middle" font-weight="600" transform="rotate(-90 12 ${(ARR + H - ABA) / 2})">Vistas</text>
+    <line x1="${IZQ}" x2="${W - DER}" y1="${sy(med)}" y2="${sy(med)}" stroke="#94a3b8" stroke-dasharray="5 4"/>
+    <text x="${W - DER - 4}" y="${sy(med) - 5}" font-size="10" fill="#64748b" text-anchor="end">mediana ${num(Math.round(med))} vistas</text>
+    <line x1="${sx(0)}" x2="${sx(maxX)}" y1="${sy(yT(0))}" y2="${sy(yT(maxX))}" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="2 3" opacity=".7"/>
+    ${pts.sort((a, c) => c.inter - a.inter).map(p => { const arriba = p.y >= med, rad = 5 + 7 * Math.sqrt(p.inter / maxInter);
+      return `<circle cx="${sx(p.x).toFixed(1)}" cy="${sy(p.y).toFixed(1)}" r="${rad.toFixed(1)}" fill="${arriba ? '#10b981' : '#f59e0b'}" fill-opacity=".55" stroke="${arriba ? '#059669' : '#d97706'}" stroke-width="1.5" data-video="${esc(p.id)}" style="cursor:pointer"><title>${esc(p.t.slice(0, 70))}\n${p.x} s · ${num(p.y)} vistas (${(p.y / med).toFixed(1)}× la mediana)\n${num(p.inter)} interacciones · ${p.tasa.toFixed(2)} %${p.fecha ? '\nPublicado ' + new Date(p.fecha).toLocaleDateString('es-PE') : ''}\n(clic para abrir la ficha)</title></circle>`; }).join('')}
+  </svg>`;
+  // Rangos de duración
+  const rangos = [[0, 15, '0–15 s'], [15, 30, '15–30 s'], [30, 45, '30–45 s'], [45, 60, '45–60 s'], [60, 90, '1–1.5 min'], [90, 180, '1.5–3 min'], [180, 1e9, '+3 min']];
+  const filas = rangos.map(([a, z, et]) => { const g = pts.filter(p => p.x >= a && p.x < z); if (!g.length) return null;
+    const vis = g.reduce((s2, p) => s2 + p.y, 0), it = g.reduce((s2, p) => s2 + p.inter, 0);
+    return { et, n: g.length, med: mediana(g.map(p => p.y)), tasa: vis ? it / vis * 100 : 0, sobre: g.filter(p => p.y >= med).length }; }).filter(Boolean);
+  const mejor = filas.filter(f2 => f2.n >= 2).sort((a, c) => c.med - a.med)[0] || filas.sort((a, c) => c.med - a.med)[0];
+  const maxMed = Math.max(1, ...filas.map(f2 => f2.med));
+  const tabla = `<div class="scroll" style="margin-top:12px"><table class="dur-tabla"><thead><tr><th>Duración</th><th>Videos</th><th>Vistas medianas</th><th></th><th>Sobre la mediana</th><th>Interacción</th></tr></thead><tbody>
+    ${filas.map(f2 => `<tr class="${f2 === mejor ? 'dur-mejor' : ''}"><td><b>${f2.et}</b>${f2 === mejor ? ' <span class="st-tag">mejor</span>' : ''}</td><td>${f2.n}</td><td><b>${num(Math.round(f2.med))}</b></td>
+      <td style="min-width:110px"><div class="st-barra"><i style="width:${(f2.med / maxMed * 100).toFixed(1)}%;background:${f2 === mejor ? '#10b981' : '#a5b4fc'}"></i></div></td>
+      <td>${f2.sobre} de ${f2.n}</td><td>${f2.tasa.toFixed(2)} %</td></tr>`).join('')}
+  </tbody></table></div>`;
+  return `<div class="card panel"><div class="sec-title">Duración vs. vistas <small>${pts.length} videos · escala logarítmica</small></div>
+    ${svg}
+    <p class="sub" style="font-size:12px"><span style="color:#10b981">●</span> sobre la mediana · <span style="color:#f59e0b">●</span> bajo la mediana · el tamaño del punto es la interacción · <span style="color:#7c3aed">┄</span> tendencia · toca un punto para abrir el video.</p>
+    <div class="insight" style="margin-top:10px"><span class="e">⏱</span><div><b>${mejor ? `Tu mejor duración: ${mejor.et}` : 'Duración'}</b><p>${mejor ? `Esos videos logran una mediana de ${num(Math.round(mejor.med))} vistas (${(mejor.med / med).toFixed(1)}× lo normal de la cuenta). ` : ''}La duración ${fuerzaR} (r = ${r.toFixed(2)}).</p></div></div>
+    ${tabla}
+  </div>`;
 }
