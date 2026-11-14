@@ -273,6 +273,21 @@
   .st-fila .tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .st-barra { height: 8px; border-radius: 99px; background: #f1f5f9; overflow: hidden; } .st-barra i { display: block; height: 100%; border-radius: 99px; }
   .st-fila small { color: var(--muted); text-align: right; }
+  .st-comp { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .st-comp div { display: grid; gap: 3px; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  .st-comp small { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; } .st-comp b { font-size: 19px; font-weight: 800; }
+  .st-comp small.sub { text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 11px; }
+  .st-d { font-size: 12px; font-weight: 800; } .st-d.sube { color: #059669; } .st-d.baja { color: #dc2626; } .st-d.igual { color: #ea580c; }
+  .st-nr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; } .st-nr b { display: block; font-size: 24px; font-weight: 800; } .st-nr small { color: var(--muted); font-size: 11.5px; }
+  .st-split { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: #f1f5f9; margin-top: 12px; }
+  .st-sub { font-size: 12.5px; font-weight: 700; margin-bottom: 8px; }
+  .st-tres { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+  table.st-mini td { padding: 6px 4px; font-size: 12.5px; } table.st-mini td.tt { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+  .st-mal { color: #dc2626; font-weight: 700; }
+  table.st-calor { border-collapse: separate; border-spacing: 3px; width: 100%; } table.st-calor th { font-size: 10px; color: var(--muted); font-weight: 600; padding: 0 2px; text-align: center; }
+  table.st-calor td { height: 26px; min-width: 22px; border-radius: 5px; font-size: 10px; font-weight: 700; color: #fff; text-align: center; padding: 0; }
+  table.st-rec td.tt { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; } table.st-rec th:nth-child(-n+3), table.st-rec td:nth-child(-n+3) { text-align: left; }
+  .st-online { color: #10b981; }
   .st-click { cursor: pointer; } .st-click:hover td { background: #f5f3ff; }
   /* Selector de rango */
   .seg-rango { flex-wrap: wrap; align-items: center; }
@@ -895,6 +910,7 @@ document.addEventListener('visibilitychange', () => {
 <script src="salud.js?v=2"></script>
 <script src="pro.js?v=4"></script>
 <script src="horas.js?v=16"></script>
-<script src="sitios.js?v=1"></script>
+<script src="sitios.js?v=2"></script>
+<script src="sitios2.js?v=1"></script>
 </body>
 </html>

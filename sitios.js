@@ -104,6 +104,7 @@ function vSitios() {
         <p class="sub" style="font-size:12px">${horaPico.sesiones ? `Hora pico: <b>${horaPico.h}</b> (${num(horaPico.sesiones)} visitas en el periodo).` : 'Sin datos aún.'}</p></div>
       <div class="card panel"><div class="sec-title">De dónde llegan</div>${listaBarras(d.origen || [], 'origen', 'sesiones', num, '#0891b2')}</div>
     </section>
+    ${typeof seccionesSitio === 'function' ? seccionesSitio(d) : ''}
     <section class="grid g3" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
       <div class="card panel"><div class="sec-title">Países <small>por zona horaria</small></div>${listaBarras(d.paises || [], 'pais', 'visitantes', num, '#059669')}</div>
       <div class="card panel"><div class="sec-title">Dispositivos</div>${listaBarras(d.dispositivos || [], 'dispositivo', 'visitantes', num, '#7c3aed')}</div>
