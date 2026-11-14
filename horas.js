@@ -188,12 +188,6 @@ function detalleVideo(x) {
   const hh = h => String(h).padStart(2, '0') + ':00';
   const cel = n => (n ? `<b class="${n > 0 ? 'up' : 'down'}">${n > 0 ? '+' : ''}${num(n)}</b>` : '<span class="cero">—</span>');
   return `<div class="vd">
-    <div class="vd-res">
-      <div><small>Vistas en el día</small><b>+${num(x.vistas)}</b></div>
-      <div><small>Hora pico</small><b>${x.pico.v ? hh(x.pico.h) : '—'}</b>${x.pico.v ? `<em>+${num(x.pico.v)} vistas</em>` : ''}</div>
-      <div><small>Promedio por hora</small><b>${num(Math.round(total / filas.length))}</b><em>en ${filas.length} hora(s) medidas</em></div>
-      <div><small>Interacción del día</small><b>${num(x.likes + x.com + x.sh)}</b><em>${num(x.likes)} likes · ${num(x.com)} coment. · ${num(x.sh)} compart.</em></div>
-    </div>
     <div class="vd-lista">
       <div class="vd-cab"><span>Hora</span><span>Vistas ganadas</span><span>% del día</span><span>Likes</span><span>Coment.</span><span>Compart.</span></div>
       ${filas.map(([h, o]) => `<div class="vd-fila ${x.pico.v && h === x.pico.h ? 'pico' : ''}">
