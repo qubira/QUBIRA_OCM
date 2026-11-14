@@ -63,3 +63,40 @@ document.addEventListener('click', async e => {
     pintar(); abrirVideo(b.dataset.refrescar); toast('Video actualizado con datos de TikTok');
   } catch (er) { toast(er.message, true); b.disabled = false; b.textContent = 'Actualizar desde TikTok'; }
 });
+
+// ─── Videos fuera de las métricas (eliminados en TikTok u ocultos a mano) ───
+async function recargarTodo() {
+  estado.datos = await api('/tiktok/resumen?dias=365');
+  estado.horas = {};
+  repintarSeguro();
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-ocultar], [data-restaurar]');
+  if (!b) return;
+  e.preventDefault();
+  const ocultar = !!b.dataset.ocultar, id = b.dataset.ocultar || b.dataset.restaurar;
+  if (ocultar && !confirm('¿Quitar este video de todas las métricas?\nNo se borra: puedes restaurarlo en Conexión → Videos fuera de las métricas.')) return;
+  b.disabled = true;
+  try {
+    await api(`/tiktok/videos/${encodeURIComponent(id)}/ocultar`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ oculto: ocultar }) });
+    document.getElementById('ficha-video')?.remove();
+    excluidos = null;
+    await recargarTodo();
+    toast(ocultar ? 'Video quitado de las métricas' : 'Video restaurado en las métricas');
+  } catch (er) { toast(er.message, true); b.disabled = false; }
+});
+let excluidos = null;
+function vExcluidos() {
+  if (!excluidos) {
+    api('/tiktok/videos/excluidos').then(r => { excluidos = r; if (estado.vista === 'conexion') repintarSeguro(); }).catch(er => { excluidos = []; toast(er.message, true); });
+    return '<div class="spin"></div>';
+  }
+  if (!excluidos.length) return '<p class="vacio">Ningún video fuera de las métricas. Los eliminados en TikTok se detectan solos al sincronizar; para quitar uno a mano, ábrelo y pulsa «Quitar de las métricas».</p>';
+  return `<div class="scroll"><table><thead><tr><th>Video</th><th>Motivo</th><th>Vistas guardadas</th><th></th></tr></thead><tbody>
+    ${excluidos.map(x => `<tr><td><div class="vh-vid">${x.portada ? `<img src="${esc(x.portada)}" alt="" onerror="this.style.visibility='hidden'">` : ''}<div><span>${esc((x.titulo || 'Sin título').replace(/\*\*/g, '').slice(0, 60))}</span>
+      <small>${x.publicado_en ? 'Publicado ' + new Date(x.publicado_en).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</small></div></div></td>
+      <td>${x.eliminado_en ? `<span class="chip err">Eliminado en TikTok</span><br><small class="sub">detectado ${fecha(x.eliminado_en)}</small>` : '<span class="chip warn">Oculto a mano</span>'}</td>
+      <td>${num(+x.vistas || 0)}</td>
+      <td><button class="btn btn-sec btn-mini" data-restaurar="${esc(x.video_id)}">Restaurar</button></td></tr>`).join('')}
+  </tbody></table></div>`;
+}

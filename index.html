@@ -221,6 +221,7 @@
   .chk div { display: grid; gap: 2px; min-width: 0; flex: 1; } .chk b { font-size: 13px; } .chk small { color: var(--muted); font-size: 12px; }
   .chk em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--primary); background: var(--primary-light); border-radius: 99px; padding: 2px 8px; flex: none; }
   .ficha-acc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .btn-mini { padding: 5px 10px; font-size: 12px; }
   /* Videos por hora */
   /* Lista de videos con desplazamiento propio (la página no se mueve) */
   .vh-scroll { max-height: 620px; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--border); border-radius: 12px; }
@@ -834,6 +835,7 @@ function vConexion() {
           <button class="btn btn-sec" id="btn-reconectar">${ico('i-link', 15)} Reconectar</button>
           <button class="btn btn-danger" id="btn-desconectar" data-id="${c.id}">Desconectar</button>
         </div></div>
+      <div class="card panel" style="grid-column:1/-1"><div class="sec-title">Videos fuera de las métricas</div>${typeof vExcluidos === 'function' ? vExcluidos() : ''}</div>
       <div class="card panel"><div class="sec-title">Qué puede hacer OCM</div>
         <div class="insight"><span class="e">✅</span><div><b>Disponible</b><p>Seguidores, seguidos, likes, videos, métricas por video e histórico diario.</p></div></div>
         <div class="insight"><span class="e">💬</span><div><b>Comentarios y demografía</b><p>Requieren la Business API con correo corporativo.</p></div></div>
@@ -869,9 +871,9 @@ document.addEventListener('visibilitychange', () => {
   else api('/tiktok/resumen?dias=365').then(d => { estado.datos = d; repintarSeguro(); }).catch(() => {});
 });
 </script>
-<script src="analisis.js?v=3"></script>
-<script src="estrategia.js?v=2"></script>
-<script src="salud.js?v=1"></script>
+<script src="analisis.js?v=4"></script>
+<script src="estrategia.js?v=3"></script>
+<script src="salud.js?v=2"></script>
 <script src="pro.js?v=2"></script>
 <script src="horas.js?v=15"></script>
 </body>

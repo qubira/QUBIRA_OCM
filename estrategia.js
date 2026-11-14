@@ -51,12 +51,21 @@ function vEstrategia() {
 
   // Palabras clave (sin hashtags ni palabras vacías)
   const vacias = new Set('de la el en y a los las un una para con tu tus que por del al es se lo mas más nuestro nuestra te ti su sus o como desde qubira'.split(' '));
-  const pal = {};
+  /* Cada palabra se mide contra la mediana de vistas de la cuenta. Se cuentan títulos distintos
+     (dos videos con el mismo texto cuentan como uno) y las palabras que aparecen siempre juntas
+     en los mismos videos se agrupan en una sola fila. */
+  const pal = {}, medianaV = mediana(v.map(x => +x.vistas)) || 1;
   v.forEach(x => {
     const ws = new Set((x.titulo || '').toLowerCase().replace(/#[\p{L}\p{N}_]+/gu, ' ').match(/\p{L}{4,}/gu) || []);
-    ws.forEach(w => { if (vacias.has(w)) return; pal[w] = pal[w] || { w, n: 0, s: 0 }; pal[w].n++; pal[w].s += +x.vistas; });
+    const firma = (x.titulo || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    ws.forEach(w => { if (vacias.has(w)) return; const p = pal[w] = pal[w] || { w, ids: [], titulos: new Set(), s: 0 }; p.ids.push(x.video_id); p.titulos.add(firma); p.s += +x.vistas; });
   });
-  const palabras = Object.values(pal).filter(p => p.n >= 2).map(p => ({ ...p, m: p.s / p.n })).sort((a, b) => b.m - a.m).slice(0, 10);
+  const grupos = {};
+  Object.values(pal).filter(p => p.titulos.size >= 2).forEach(p => {
+    const k = p.ids.slice().sort().join(',');
+    (grupos[k] = grupos[k] || { ws: [], n: p.ids.length, t: p.titulos.size, m: p.s / p.ids.length }).ws.push(p.w);
+  });
+  const palabras = Object.values(grupos).map(g => ({ ...g, x: g.m / medianaV })).sort((a, b) => b.x - a.x).slice(0, 10);
 
   // Por mes
   const meses = {};
@@ -104,8 +113,9 @@ function vEstrategia() {
     </section>
 
     <section class="grid g2">
-      <div class="card panel"><div class="sec-title">Palabras que atraen vistas <small>usadas en 2 o más títulos</small></div>
-        ${palabras.length ? barras(palabras.map(p => ({ l: `${p.w} (${p.n})`, v: Math.round(p.m), c: '#0891b2' }))) : '<p class="vacio">No hay palabras repetidas suficientes.</p>'}</div>
+      <div class="card panel"><div class="sec-title">Palabras que atraen vistas</div>
+        <p class="sub" style="font-size:12px;margin:-4px 0 10px">Cuántas veces más (o menos) vistas consiguen los videos que usan la palabra, comparado con un video típico de la cuenta (${num(Math.round(medianaV))} vistas). <b>1.0×</b> = igual que lo normal.</p>
+        ${palabras.length ? barras(palabras.map(p => ({ l: `${p.ws.slice(0, 3).join(', ')}${p.ws.length > 3 ? ' +' + (p.ws.length - 3) : ''} · ${p.n} videos`, v: +p.x.toFixed(2), c: p.x >= 1 ? '#059669' : '#d97706' })), x => x.toFixed(1) + '×') : '<p class="vacio">Aún no hay palabras usadas en al menos 2 títulos distintos.</p>'}</div>
       <div class="card panel"><div class="sec-title">Rendimiento por mes de publicación</div>
         <div class="scroll"><table><thead><tr><th>Mes</th><th>Videos</th><th>Vistas medias</th><th>Interacción</th></tr></thead><tbody>
           ${Object.entries(meses).sort().reverse().map(([k, o]) => `<tr><td>${new Date(k + '-15').toLocaleDateString('es-PE', { month: 'long', year: 'numeric' })}</td><td>${o.n}</td><td><b>${num(Math.round(o.s / o.n))}</b></td><td class="eng">${fpct(pct(o.i, o.s))}</td></tr>`).join('')}

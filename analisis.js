@@ -225,6 +225,7 @@ function abrirVideo(id) {
         <div class="ficha-acc">
           <a class="btn btn-primary" href="${esc(v.enlace || '#')}" target="_blank" rel="noopener noreferrer">Ver en TikTok ↗</a>
           <button class="btn btn-sec" data-refrescar="${esc(v.video_id)}">Actualizar desde TikTok</button>
+          <button class="btn btn-danger" data-ocultar="${esc(v.video_id)}" title="Para videos eliminados o que no quieres contar">Quitar de las métricas</button>
           ${v.embed ? `<button class="btn btn-sec" data-embed="${esc(v.embed)}">Copiar embed</button>` : ''}
         </div>
         <p class="sub" style="margin-top:8px">${v.alto && v.ancho ? `${v.ancho}×${v.alto} · ${+v.alto >= +v.ancho ? 'vertical' : 'horizontal'}` : ''}${v.actualizado ? ` · datos del ${fecha(v.actualizado)}` : ''}</p>
