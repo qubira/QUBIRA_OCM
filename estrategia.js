@@ -100,10 +100,7 @@ function vEstrategia() {
 
     <section class="grid g21">
       ${graficoDuracion(v)}
-      <div class="card panel"><div class="sec-title">Calidad de la interacción</div>
-        ${calidad.map(([n, d, val, ref]) => `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:13px"><b>${n}</b><b>${val.toFixed(1)}</b></div>
-          <div class="track" style="margin:6px 0"><div class="fill" style="width:${Math.min(100, val / ref * 100)}%;--c:${val >= ref * 0.6 ? '#059669' : val >= ref * 0.3 ? '#d97706' : '#dc2626'}"></div></div>
-          <small class="sub">${d} · referencia sana ≈ ${ref}</small></div>`).join('')}</div>
+      ${typeof tarjetaCalidad === 'function' ? tarjetaCalidad(v) : ''}
     </section>
 
     <section class="grid g2">

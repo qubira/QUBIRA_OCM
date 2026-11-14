@@ -291,6 +291,20 @@
   table.st-serie td:first-child, table.st-serie th:first-child { text-align: left; } tr.st-pico td { background: #eef2ff; } tr.st-total td { border-top: 2px solid var(--border); background: #fafafa; }
   .st-tag { font-size: 10px; font-weight: 700; color: #4338ca; background: #e0e7ff; border-radius: 99px; padding: 1px 7px; }
   table.dur-tabla td:first-child, table.dur-tabla th:first-child { text-align: left; } tr.dur-mejor td { background: #ecfdf5; }
+  /* Calidad de la interacción */
+  .cal-top { display: flex; gap: 14px; align-items: center; padding: 4px 0 14px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .cal-top .nota-anillo { margin: 0; flex: none; }
+  .cal-m { padding: 10px 0; border-bottom: 1px solid #f3f4f6; } .cal-m:last-child { border-bottom: 0; }
+  .cal-cab { display: flex; align-items: center; gap: 8px; font-size: 13px; } .cal-val { margin-left: auto; font-size: 15px; }
+  .cal-et { font-size: 10.5px; font-weight: 700; border-radius: 99px; padding: 1px 8px; }
+  .cal-barra { position: relative; height: 8px; border-radius: 99px; background: #f1f5f9; margin: 7px 0 5px; }
+  .cal-barra i { display: block; height: 100%; border-radius: 99px; } .cal-barra span { position: absolute; top: -3px; width: 2px; height: 14px; background: #334155; border-radius: 2px; }
+  .cal-tip { font-size: 11.5px; color: #475569; margin-top: 4px; } .cal-mejor { font-size: 11.5px; margin-top: 3px; color: var(--muted); }
+  /* Evolución en la ficha */
+  .ev-res { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 8px; }
+  .ev-res div { display: grid; gap: 1px; border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
+  .ev-res small { font-size: 10.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; } .ev-res b { font-size: 17px; font-weight: 800; } .ev-res em { font-style: normal; font-size: 11px; color: var(--muted); }
+  table.ev-tabla td, table.ev-tabla th { font-size: 12px; } table.ev-tabla td:first-child, table.ev-tabla th:first-child { text-align: left; }
   .st-click { cursor: pointer; } .st-click:hover td { background: #f5f3ff; }
   /* Selector de rango */
   .seg-rango { flex-wrap: wrap; align-items: center; }
@@ -908,12 +922,13 @@ document.addEventListener('visibilitychange', () => {
   else api('/tiktok/resumen?dias=365').then(d => { estado.datos = d; repintarSeguro(); }).catch(() => {});
 });
 </script>
-<script src="analisis.js?v=4"></script>
-<script src="estrategia.js?v=4"></script>
+<script src="analisis.js?v=5"></script>
+<script src="estrategia.js?v=5"></script>
 <script src="salud.js?v=2"></script>
 <script src="pro.js?v=4"></script>
 <script src="horas.js?v=16"></script>
 <script src="sitios.js?v=3"></script>
 <script src="sitios2.js?v=1"></script>
+<script src="detalle.js?v=1"></script>
 </body>
 </html>

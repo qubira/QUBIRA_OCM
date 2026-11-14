@@ -237,11 +237,10 @@ function abrirVideo(id) {
         ['Likes / 100 vistas', pct(+v.likes, +v.vistas).toFixed(1)], ['Comentarios / 1 000', (+v.comentarios / (+v.vistas || 1) * 1000).toFixed(1)], ['Compartidos / 1 000', (+v.compartidos / (+v.vistas || 1) * 1000).toFixed(1)], ['Días publicado', v.publicado_en ? Math.floor(diasDesde(v.publicado_en)) : '—']]
         .map(([t, x]) => `<div class="ficha-m"><small>${t}</small><b>${x}</b></div>`).join('')}
     </div>
-    <div class="sec-title" style="margin-top:6px">Evolución de vistas <small>${hist.length} día(s) registrados</small></div>
-    ${hist.length >= 2 ? `<div class="cols" style="height:120px">${hist.slice(-14).map(x => `<div class="col"><b>${corto(x.vistas)}</b><div class="b" style="height:${Math.max(3, x.vistas / maxH * 100)}%"></div><span>${fdia(x.fecha)}</span></div>`).join('')}</div>`
-      : '<p class="vacio" style="padding:14px">La evolución diaria aparece desde el segundo día de registro.</p>'}
+    ${typeof evolucionVideo === 'function' ? evolucionVideo(v, hist) : ''}
   </div>`;
   document.body.appendChild(div);
+  if (typeof pintarHorasFicha === 'function') pintarHorasFicha();
   div.addEventListener('click', e => { if (e.target === div || e.target.closest('.modal-x')) cerrar(); });
   document.addEventListener('keydown', function esc_(e) { if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', esc_); } });
 }
