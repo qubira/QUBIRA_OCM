@@ -102,7 +102,8 @@ function vCrecimientoHoras() {
   // Videos que más crecieron en el día
   const porVideo = {};
   for (const r of d.videos || []) (porVideo[r.video_id] ||= []).push(r);
-  const tops = Object.entries(porVideo).map(([id, s]) => {
+  const ultimaHora = Math.max(-1, ...(d.videos || []).filter(r => r.hora.slice(0, 10) === fechaModo()).map(r => +r.hora.slice(11, 13)));
+  const todos = Object.entries(porVideo).map(([id, s]) => {
     // Punto de partida: foto por hora previa al día → si no, la primera foto del día (su valor inicial)
     const z = s.at(-1), v = estado.datos.videos.find(x => x.video_id === id) || {};
     const a = s[0].hora.slice(0, 10) < fechaModo() ? s[0]
@@ -117,8 +118,25 @@ function vCrecimientoHoras() {
       horas[h] = ref ? { v: +r.vistas - +ref.vistas, l: +r.likes - +ref.likes, c: +r.comentarios - +ref.comentarios, s: +r.compartidos - +ref.compartidos } : { v: 0, l: 0, c: 0, s: 0 };
     });
     const pico = horas.reduce((m, x, h) => (x && x.v > (m.v ?? 0) ? { h, v: x.v } : m), {});
-    return { id, v, horas, pico, vistas: +z.vistas - +a.vistas, likes: +z.likes - +a.likes, com: +z.comentarios - +a.comentarios, sh: +z.compartidos - +a.compartidos };
-  }).filter(x => x.vistas || x.likes || x.com || x.sh).sort((a, b) => b.vistas - a.vistas).slice(0, 10);
+    // Vistas ganadas hasta el cierre de la hora anterior: última foto antes de la hora actual,
+    // o el valor del primer minuto de la hora actual si el video no tenía foto antes
+    const antes = s.filter(r => r.hora.slice(0, 10) < fechaModo() || +r.hora.slice(11, 13) < ultimaHora).at(-1);
+    const actualH = s.find(r => r.hora.slice(0, 10) === fechaModo() && +r.hora.slice(11, 13) === ultimaHora);
+    const previoV = antes ? +antes.vistas : (actualH && actualH.vistas_ini != null ? +actualH.vistas_ini : +a.vistas);
+    return { id, v, horas, pico, vistasPrev: Math.max(0, previoV - +a.vistas), vistas: +z.vistas - +a.vistas, likes: +z.likes - +a.likes, com: +z.comentarios - +a.comentarios, sh: +z.compartidos - +a.compartidos };
+  });
+  // Puesto actual y puesto al cierre de la hora anterior (ranking por vistas ganadas en el día)
+  const orden = (k) => [...todos].sort((a, b) => b[k] - a[k] || a.id.localeCompare(b.id));
+  orden('vistas').forEach((x, i) => { x.puesto = i + 1; });
+  // Los empates de la hora anterior se ordenan como ahora: así solo cuenta como subida/bajada un adelantamiento real
+  [...todos].sort((a, b) => b.vistasPrev - a.vistasPrev || a.puesto - b.puesto).forEach((x, i) => { x.puestoPrev = i + 1; });
+  const tops = todos.filter(x => x.vistas || x.likes || x.com || x.sh).sort((a, b) => a.puesto - b.puesto).slice(0, 10);
+  const cambioPuesto = x => {
+    const dif = x.puestoPrev - x.puesto;
+    const t = dif > 0 ? `Subió ${dif} puesto(s): estaba #${x.puestoPrev} al cierre de la hora anterior`
+      : dif < 0 ? `Bajó ${-dif} puesto(s): estaba #${x.puestoPrev} al cierre de la hora anterior` : 'Mantiene su puesto respecto a la hora anterior';
+    return `<span class="pst ${dif > 0 ? 'sube' : dif < 0 ? 'baja' : 'igual'}" title="${t}"><b>#${x.puesto}</b><i>${dif > 0 ? '▲ ' + dif : dif < 0 ? '▼ ' + -dif : '='}</i></span>`;
+  };
   const tabla = [...filas].reverse().map((x, i, arr) => {
     const prev = arr[i + 1];
     const dl = c => { if (!prev || prev[c] == null) return '<td>—</td>'; const n = (+x[c] || 0) - (+prev[c] || 0); return `<td class="${n > 0 ? 'up' : n < 0 ? 'down' : ''}">${n > 0 ? '+' : ''}${num(n)}</td>`; };
@@ -139,18 +157,19 @@ function vCrecimientoHoras() {
         <p class="sub"><span style="color:#db2777">■</span> seguidores · <span style="color:#f97316">■</span> likes de los videos</p></div>
     </section>
     <section class="card panel" style="margin-bottom:16px"><div class="sec-title">Videos que más crecieron · ${esc(tituloDia())}</div>
-      ${tops.length ? `<p class="sub" style="font-size:12px;margin:-4px 0 10px">Toca una fila para ver el detalle hora por hora.</p>
-      <div class="scroll"><table class="vh-tabla"><thead><tr><th>Video</th><th>Vistas</th><th>Likes</th><th>Coment.</th><th>Compart.</th><th>Hora pico</th><th style="min-width:150px">Vistas por hora (00h–23h)</th></tr></thead><tbody>
+      ${tops.length ? `<p class="sub" style="font-size:12px;margin:-4px 0 10px">Toca una fila para ver el detalle hora por hora. El puesto se compara con el cierre de la hora anterior: <b style="color:var(--ok)">▲ sube</b> · <b style="color:#dc2626">▼ baja</b> · <b style="color:#ea580c">= se mantiene</b>.</p>
+      <div class="scroll"><table class="vh-tabla"><thead><tr><th title="Comparado con el cierre de la hora anterior">Puesto</th><th>Video</th><th>Vistas</th><th>Likes</th><th>Coment.</th><th>Compart.</th><th>Hora pico</th><th style="min-width:150px">Vistas por hora (00h–23h)</th></tr></thead><tbody>
         ${tops.map(x => {
           const abierto = vidAbiertos.has(x.id);
           const conDatos = x.horas.map((o, h) => [h, o]).filter(([, o]) => o);
           return `<tr class="vh-fila ${abierto ? 'abierta' : ''}" data-exp="${esc(x.id)}">
+            <td>${cambioPuesto(x)}</td>
             <td><div class="vh-vid">${x.v.portada ? `<img src="${esc(x.v.portada)}" alt="">` : ''}<div><a href="#" data-video="${esc(x.id)}">${esc((x.v.titulo || 'Video').replace(/\*\*/g, '').slice(0, 55))}</a>
               <small>${x.v.publicado_en ? 'Publicado ' + new Date(x.v.publicado_en).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' }) : ''}${x.v.vistas != null ? ' · ' + num(+x.v.vistas) + ' vistas en total' : ''}</small></div><span class="vh-flecha">${abierto ? '▾' : '▸'}</span></div></td>
             <td class="up">+${num(x.vistas)}</td><td>${sg(x.likes)}</td><td>${sg(x.com)}</td><td>${sg(x.sh)}</td>
             <td>${x.pico.v ? `<b>${String(x.pico.h).padStart(2, '0')}:00</b><br><small class="sub">+${num(x.pico.v)}</small>` : '—'}</td>
             <td>${miniHoras(x.horas)}</td></tr>
-            ${abierto ? `<tr class="vh-det"><td colspan="7">${detalleVideo(x)}</td></tr>` : ''}`;
+            ${abierto ? `<tr class="vh-det"><td colspan="8">${detalleVideo(x)}</td></tr>` : ''}`;
         }).join('')}
       </tbody></table></div>` : '<p class="vacio">Sin cambios registrados en los videos este día.</p>'}
     </section>

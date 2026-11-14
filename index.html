@@ -228,6 +228,11 @@
   .vh-vid div { display: grid; gap: 2px; min-width: 0; flex: 1; } .vh-vid small { color: var(--muted); font-size: 11px; }
   .vh-flecha { color: var(--muted); font-size: 12px; flex: none; }
   .vh-det td { background: #f8fafc; padding: 12px 14px 16px; }
+  .vh-tabla th:nth-child(2), .vh-tabla td:nth-child(2) { text-align: left; } .vh-tabla th:first-child, .vh-tabla td:first-child { text-align: center; width: 64px; }
+  .pst { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; min-width: 44px; }
+  .pst b { font-size: 13px; font-weight: 800; color: var(--text); }
+  .pst i { font-style: normal; font-size: 11px; font-weight: 800; border-radius: 99px; padding: 1px 8px; white-space: nowrap; }
+  .pst.sube i { color: #047857; background: #d1fae5; } .pst.baja i { color: #b91c1c; background: #fee2e2; } .pst.igual i { color: #c2410c; background: #ffedd5; }
   .vd { display: grid; gap: 14px; padding: 6px 4px; }
   .vd-res { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
   .vd-res div { display: grid; gap: 2px; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
@@ -859,6 +864,6 @@ document.addEventListener('visibilitychange', () => {
 <script src="estrategia.js?v=2"></script>
 <script src="salud.js?v=1"></script>
 <script src="pro.js?v=2"></script>
-<script src="horas.js?v=7"></script>
+<script src="horas.js?v=9"></script>
 </body>
 </html>
