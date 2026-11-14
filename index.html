@@ -228,15 +228,12 @@
   .vh-vid div { display: grid; gap: 2px; min-width: 0; flex: 1; } .vh-vid small { color: var(--muted); font-size: 11px; }
   .vh-flecha { color: var(--muted); font-size: 12px; flex: none; }
   .vh-det td { background: #f8fafc; padding: 12px 14px 16px; }
-  .vh-tabla th:nth-child(2), .vh-tabla td:nth-child(2) { text-align: left; } .vh-tabla th:first-child, .vh-tabla td:first-child { text-align: center; width: 64px; }
-  .pst { display: inline-flex; align-items: center; gap: 7px; }
-  .pst-n { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-size: 12.5px; font-weight: 800; color: #374151; background: #f3f4f6; }
-  .pst-n.p1 { background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; }
-  .pst-n.p2 { background: linear-gradient(135deg, #f1f5f9, #94a3b8); color: #1e293b; }
-  .pst-n.p3 { background: linear-gradient(135deg, #fed7aa, #c2410c); color: #fff; }
-  .pst i { display: inline-flex; align-items: center; gap: 2px; min-width: 26px; font-style: normal; font-size: 12px; font-weight: 800; }
-  .pst i svg { width: 10px; height: 10px; fill: currentColor; }
-  .pst.sube i { color: #059669; } .pst.baja i { color: #dc2626; } .pst.igual i { color: #ea580c; }
+  .vh-tabla th:nth-child(2), .vh-tabla td:nth-child(2) { text-align: left; } .vh-tabla th:first-child, .vh-tabla td:first-child { text-align: left; width: 104px; min-width: 104px; white-space: nowrap; }
+  .pst { display: inline-flex; align-items: stretch; height: 26px; border-radius: 999px; overflow: hidden; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,.06); border: 1px solid var(--pc); }
+  .pst-n { display: flex; align-items: center; gap: 2px; padding: 0 8px 0 9px; background: #fff; font-size: 12.5px; font-weight: 800; color: #111827; }
+  .pst i { display: flex; align-items: center; justify-content: center; gap: 3px; min-width: 30px; padding: 0 8px; font-style: normal; font-size: 11.5px; font-weight: 800; color: #fff; background: var(--pc); }
+  .pst i svg { width: 9px; height: 9px; fill: currentColor; }
+  .pst.sube { --pc: #10b981; } .pst.baja { --pc: #ef4444; } .pst.igual { --pc: #f97316; }
   .vd { display: grid; gap: 14px; padding: 6px 4px; }
   .vd-res { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
   .vd-res div { display: grid; gap: 2px; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
@@ -868,6 +865,6 @@ document.addEventListener('visibilitychange', () => {
 <script src="estrategia.js?v=2"></script>
 <script src="salud.js?v=1"></script>
 <script src="pro.js?v=2"></script>
-<script src="horas.js?v=10"></script>
+<script src="horas.js?v=11"></script>
 </body>
 </html>
