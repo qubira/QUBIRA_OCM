@@ -324,6 +324,16 @@
   .cu-insights > div { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 12.5px; }
   .cu-insights small { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; } .cu-insights p { margin: 3px 0; }
   .cu-aviso { font-size: 10px; font-weight: 700; color: #b45309; background: #fef3c7; border-radius: 99px; padding: 1px 7px; }
+  /* ¿Qué influye? */
+  .inf-escala { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+  .inf-f { padding: 10px 0; border-top: 1px solid #f3f4f6; }
+  .inf-cab { display: flex; align-items: baseline; gap: 8px; font-size: 13px; } .inf-r { margin-left: auto; font-weight: 800; font-size: 14px; } .inf-fz { font-size: 11px; font-weight: 700; min-width: 58px; text-align: right; }
+  .inf-barra { position: relative; height: 9px; border-radius: 99px; background: #f1f5f9; margin: 6px 0; }
+  .inf-barra i { position: absolute; top: 0; height: 100%; border-radius: 99px; } .inf-barra span { position: absolute; left: 50%; top: -3px; width: 2px; height: 15px; background: #475569; }
+  .inf-txt { font-size: 12px; margin: 2px 0 6px; }
+  .inf-comp { display: grid; gap: 4px; } .inf-comp div { display: grid; grid-template-columns: minmax(0, 150px) 1fr 52px; gap: 8px; align-items: center; font-size: 11.5px; }
+  .inf-comp small { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .inf-comp b { text-align: right; }
+  .inf-rec { font-size: 11.5px; color: #475569; margin-top: 5px; }
   .st-click { cursor: pointer; } .st-click:hover td { background: #f5f3ff; }
   /* Selector de rango */
   .seg-rango { flex-wrap: wrap; align-items: center; }
@@ -942,7 +952,7 @@ document.addEventListener('visibilitychange', () => {
 });
 </script>
 <script src="analisis.js?v=5"></script>
-<script src="estrategia.js?v=7"></script>
+<script src="estrategia.js?v=8"></script>
 <script src="salud.js?v=2"></script>
 <script src="pro.js?v=4"></script>
 <script src="horas.js?v=16"></script>
@@ -950,5 +960,6 @@ document.addEventListener('visibilitychange', () => {
 <script src="sitios2.js?v=1"></script>
 <script src="detalle.js?v=2"></script>
 <script src="rendimiento.js?v=3"></script>
+<script src="influye.js?v=2"></script>
 </body>
 </html>

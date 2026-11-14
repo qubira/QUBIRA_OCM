@@ -90,11 +90,7 @@ function vEstrategia() {
 
     <section class="grid g21">
       ${graficoDuracion(v)}
-      <div class="card panel"><div class="sec-title">¿Qué influye en las vistas? <small>correlación con las vistas (−1 a 1)</small></div>
-        <div class="bars">${factores.map(f => `<div class="bar-row" style="grid-template-columns:150px 1fr 120px"><span class="lbl">${f.n}</span>
-          <div class="track" style="position:relative"><div class="fill" style="position:absolute;left:${f.r < 0 ? 50 + f.r * 50 : 50}%;width:${Math.abs(f.r) * 50}%;--c:${f.r >= 0 ? '#059669' : '#dc2626'}"></div><div style="position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:#9ca3af"></div></div>
-          <span class="val" style="font-weight:600">${f.r >= 0 ? '+' : ''}${f.r.toFixed(2)} · ${fuerza(f.r)}</span></div>`).join('')}</div>
-        <p class="sub" style="margin-top:10px">${factores[0] && Math.abs(factores[0].r) >= 0.3 ? `El factor con más relación es <b>${factores[0].n.toLowerCase()}</b>: ${factores[0].r > 0 ? 'a más, más vistas' : 'a más, menos vistas'}.` : 'Ningún factor explica por sí solo las vistas; el contenido pesa más que el formato.'} Correlación no implica causa: úsalo como pista para probar.</p></div>
+      ${typeof tarjetaInfluye === 'function' ? tarjetaInfluye(v) : ''}
     </section>
 
     <section class="grid" style="grid-template-columns:1fr">
