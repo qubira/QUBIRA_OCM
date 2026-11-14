@@ -58,11 +58,11 @@ function barras24(valores, color, sufijo = '') {
   const hasta = fechaModo() === hoyLima() ? new Date(Date.now() - 5 * 36e5).getUTCHours() : 23;
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" class="g-svg" role="img">
     ${valores.map((v, h) => {
-      const x = IZQ + h * ancho, futuro = h > hasta, alto = v ? Math.max(2, v / max * (H - ABA - ARR)) : 0;
+      const x = IZQ + h * ancho, futuro = h > hasta, alto = v > 0 ? Math.max(3, v / max * (H - ABA - ARR)) : (v != null ? 2 : 0);
       return `${futuro ? `<rect x="${x + 2}" y="${ARR}" width="${ancho - 4}" height="${H - ABA - ARR}" fill="#fafafa"/>` : ''}
         ${v == null && !futuro ? `<rect x="${x + 2}" y="${H - ABA - 3}" width="${ancho - 4}" height="3" fill="#e5e7eb"><title>${String(h).padStart(2, '0')}:00 · sin foto</title></rect>` : ''}
-        ${v ? `<rect x="${x + 3}" y="${H - ABA - alto}" width="${ancho - 6}" height="${alto}" rx="3" fill="${color}"><title>${String(h).padStart(2, '0')}:00 · ${v > 0 ? '+' : ''}${num(v)}${sufijo}</title></rect>
-          <text x="${x + ancho / 2}" y="${H - ABA - alto - 5}" font-size="10" font-weight="700" fill="${color}" text-anchor="middle">${v > 0 ? '+' : ''}${num(v)}</text>` : ''}
+        ${v != null && !futuro ? `<rect x="${x + 3}" y="${H - ABA - alto}" width="${ancho - 6}" height="${alto}" rx="3" fill="${color}"><title>${String(h).padStart(2, '0')}:00 · ${v > 0 ? '+' : ''}${num(v)}${sufijo}</title></rect>
+          <text x="${x + ancho / 2}" y="${H - ABA - alto - 5}" font-size="10" font-weight="700" fill="${v ? color : "#9ca3af"}" text-anchor="middle">${v > 0 ? '+' : ''}${num(v)}</text>` : ''}
         ${h % 2 === 0 ? `<text x="${x + ancho / 2}" y="${H - 8}" font-size="10" fill="#9ca3af" text-anchor="middle">${String(h).padStart(2, '0')}h</text>` : ''}`;
     }).join('')}
     <line x1="${IZQ}" x2="${W - IZQ}" y1="${H - ABA}" y2="${H - ABA}" stroke="#e5e7eb"/>
@@ -75,24 +75,38 @@ function vCrecimientoHoras() {
   if (!filas) return cab + '<div class="spin"></div></section>';
   if (d?.error) return cab + `<p class="vacio">${esc(d.error)}</p></section>`;
   const ini = filas[0] || {}, fin = filas.at(-1) || {};
-  const g = c => (filas.length > 1 && ini[c] != null ? (+fin[c] || 0) - (+ini[c] || 0) : 0);
   const sg = n => (n > 0 ? '+' : '') + num(n);
-  // Ganancia en cada hora (contra la foto anterior)
+  /* Ganancia de cada hora:
+     - si hay foto de la hora anterior (o el inicio real del día), contra esa foto;
+     - si no, lo ganado dentro de la misma hora (primer valor de la hora → último). */
+  const hN = r => +r.fecha.slice(11, 13);
   const porHora = campo => {
     const out = Array(24).fill(null);
-    // La primera hora no se compara contra el cierre del día anterior (sumaría todo lo de la noche)
-    filas.forEach((r, i) => { if (r.base || !i || filas[i - 1].aprox || filas[i - 1][campo] == null) return; out[+r.fecha.slice(11, 13)] = (+r[campo] || 0) - (+filas[i - 1][campo] || 0); });
-    if (filas.length === 1 && !filas[0].base) out[+filas[0].fecha.slice(11, 13)] = 0;
+    filas.forEach((r, i) => {
+      if (r.base) return;
+      const p = filas[i - 1];
+      const contigua = p && !p.aprox && p[campo] != null && (p.base ? hN(r) === 0 : hN(p) === hN(r) - 1);
+      const ref = contigua ? p[campo] : r[campo + '_ini'];
+      out[hN(r)] = ref == null ? 0 : (+r[campo] || 0) - (+ref || 0);
+    });
     return out;
   };
   const vistasH = porHora('vistas'), segH = porHora('seguidores'), likesH = porHora('likes_videos');
+  const comH = porHora('comentarios'), shH = porHora('compartidos');
+  // Totales del día: con inicio real, último − inicio; si no, la suma de lo ganado en las horas registradas
+  const suma = arr => arr.reduce((a, v) => a + (v || 0), 0);
+  const g = c => (!ini.aprox && ini.base && ini[c] != null ? (+fin[c] || 0) - (+ini[c] || 0)
+    : suma({ seguidores: segH, vistas: vistasH, likes_videos: likesH, comentarios: comH, compartidos: shH }[c]));
   const pico = vistasH.reduce((a, v, h) => (v != null && v > (a.v ?? -1) ? { h, v } : a), {});
   const horasConFoto = filas.filter(r => !r.base).length;
   // Videos que más crecieron en el día
   const porVideo = {};
   for (const r of d.videos || []) (porVideo[r.video_id] ||= []).push(r);
   const tops = Object.entries(porVideo).map(([id, s]) => {
-    const z = s.at(-1), a = s[0].hora.slice(0, 10) < fechaModo() ? s[0] : (baseVideo(id, fechaModo()) || s[0]), v = estado.datos.videos.find(x => x.video_id === id) || {};
+    // Punto de partida: foto por hora previa al día → si no, la primera foto del día (su valor inicial)
+    const z = s.at(-1), v = estado.datos.videos.find(x => x.video_id === id) || {};
+    const a = s[0].hora.slice(0, 10) < fechaModo() ? s[0]
+      : (s[0].vistas_ini != null ? { vistas: s[0].vistas_ini, likes: s[0].likes_ini, comentarios: s[0].comentarios_ini, compartidos: s[0].compartidos_ini } : s[0]);
     return { id, v, vistas: +z.vistas - +a.vistas, likes: +z.likes - +a.likes, com: +z.comentarios - +a.comentarios, sh: +z.compartidos - +a.compartidos };
   }).filter(x => x.vistas || x.likes || x.com || x.sh).sort((a, b) => b.vistas - a.vistas).slice(0, 8);
   const tabla = [...filas].reverse().map((x, i, arr) => {
@@ -102,14 +116,15 @@ function vCrecimientoHoras() {
   }).join('');
   return `
     <section class="grid g4">
-      ${kpi('Seguidores ganados', sg(g('seguidores')), `<div class="delta eq">${ini.aprox ? 'desde el cierre del ' + fdia(ini.fecha.slice(0, 10)) : esc(tituloDia())}</div>`, 'i-users', '#db2777')}
+      ${kpi('Seguidores ganados', sg(g('seguidores')), `<div class="delta eq">${ini.aprox || !ini.base ? 'en las horas registradas' : esc(tituloDia())}</div>`, 'i-users', '#db2777')}
       ${kpi('Vistas ganadas', sg(g('vistas')), `<div class="delta eq">${pico.v ? `hora pico ${String(pico.h).padStart(2, '0')}:00 (+${num(pico.v)})` : 'en el día'}</div>`, 'i-eye', '#0891b2')}
       ${kpi('Likes ganados', sg(g('likes_videos')), `<div class="delta eq">en los videos</div>`, 'i-heart', '#e11d48')}
       ${kpi('Comentarios y compartidos', sg(g('comentarios') + g('compartidos')), `<div class="delta eq">${horasConFoto} hora(s) con foto</div>`, 'i-msg', '#7c3aed')}
     </section>
     ${cab}${grafico(['seguidores', 'likes'])}</section>
     <section class="grid g2">
-      <div class="card panel"><div class="sec-title">Vistas ganadas por hora</div>${barras24(vistasH, '#0891b2', ' vistas')}</div>
+      <div class="card panel"><div class="sec-title">Vistas ganadas por hora</div>${barras24(vistasH, '#0891b2', ' vistas')}
+        <p class="sub" style="font-size:12px">Cada barra es lo ganado en esa hora. Se actualiza cada minuto con el panel abierto.</p></div>
       <div class="card panel"><div class="sec-title">Seguidores y likes por hora</div>${barras24(segH, '#db2777', ' seguidores')}${barras24(likesH, '#f97316', ' likes')}
         <p class="sub"><span style="color:#db2777">■</span> seguidores · <span style="color:#f97316">■</span> likes de los videos</p></div>
     </section>
