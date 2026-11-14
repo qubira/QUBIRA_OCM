@@ -141,7 +141,7 @@ function vCrecimientoHoras() {
     const t = dif > 0 ? `Subió ${dif} puesto(s): estaba #${x.puestoPrev} a ${refTxt}`
       : dif < 0 ? `Bajó ${-dif} puesto(s): estaba #${x.puestoPrev} a ${refTxt}` : 'Mantiene el puesto que tenía a ' + refTxt;
     const ico = dif > 0 ? '<svg viewBox="0 0 10 10"><path d="M5 1.5 9 7H1z"/></svg>' : dif < 0 ? '<svg viewBox="0 0 10 10"><path d="M5 8.5 1 3h8z"/></svg>' : '<svg viewBox="0 0 10 10"><rect x="1.5" y="3" width="7" height="1.6" rx=".8"/><rect x="1.5" y="5.6" width="7" height="1.6" rx=".8"/></svg>';
-    return `<span class="pst ${dif > 0 ? 'sube' : dif < 0 ? 'baja' : 'igual'}" title="${t}"><b class="pst-n">${x.puesto}</b><i>${dif ? ico + Math.abs(dif) : '<span class="pst-dot"></span>'}</i></span>`;
+    return `<span class="pst ${dif > 0 ? 'sube' : dif < 0 ? 'baja' : 'igual'}" title="${t}"><b class="pst-n">${x.puesto}</b><i>${dif ? ico + Math.abs(dif) : '<span class="pst-eq">=</span>'}</i></span>`;
   };
   const tabla = [...filas].reverse().map((x, i, arr) => {
     const prev = arr[i + 1];
