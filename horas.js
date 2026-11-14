@@ -52,10 +52,10 @@ function tituloDia() {
 }
 
 // Barras de 24 horas con el número encima
-function barras24(valores, color, sufijo = '') {
+function barras24(valores, color, sufijo = '', todasLasHoras = false) {
   const W = 720, H = 190, IZQ = 10, ABA = 26, ARR = 22, ancho = (W - 2 * IZQ) / 24;
   const max = Math.max(1, ...valores.map(v => v || 0));
-  const hasta = fechaModo() === hoyLima() ? new Date(Date.now() - 5 * 36e5).getUTCHours() : 23;
+  const hasta = !todasLasHoras && fechaModo() === hoyLima() ? new Date(Date.now() - 5 * 36e5).getUTCHours() : 23;
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" class="g-svg" role="img">
     ${valores.map((v, h) => {
       const x = IZQ + h * ancho, futuro = h > hasta, alto = v > 0 ? Math.max(3, v / max * (H - ABA - ARR)) : (v != null ? 2 : 0);

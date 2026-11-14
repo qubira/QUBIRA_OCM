@@ -261,6 +261,18 @@
   .vh-grid div { display: grid; gap: 2px; border: 1px solid var(--border); border-radius: 9px; padding: 7px 9px; font-size: 11.5px; background: #fff; }
   .vh-grid div.si { border-color: #a5f3fc; background: #ecfeff; } .vh-grid b { font-size: 12px; }
   .vh-mini { display: block; }
+  /* Sitios web */
+  .st-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .st-chips button { border: 1px solid var(--border); background: #fff; border-radius: 99px; padding: 6px 14px; font-size: 12.5px; font-weight: 600; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+  .st-chips button:hover { border-color: #a5b4fc; color: var(--text); }
+  .st-chips button.on { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+  .st-vivo { font-style: normal; font-size: 10.5px; font-weight: 800; background: #10b981; color: #fff; border-radius: 99px; padding: 0 6px; }
+  .st-lista { display: grid; gap: 8px; }
+  .st-fila { display: grid; grid-template-columns: minmax(0, 150px) 1fr auto 38px; gap: 10px; align-items: center; font-size: 12.5px; }
+  .st-fila .tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .st-barra { height: 8px; border-radius: 99px; background: #f1f5f9; overflow: hidden; } .st-barra i { display: block; height: 100%; border-radius: 99px; }
+  .st-fila small { color: var(--muted); text-align: right; }
+  .st-click { cursor: pointer; } .st-click:hover td { background: #f5f3ff; }
   /* Selector de rango */
   .seg-rango { flex-wrap: wrap; align-items: center; }
   .rango-dia { border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; font: inherit; font-size: 12px; margin-left: 4px; background: #fff; color: var(--text); }
@@ -323,6 +335,7 @@
   <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
   <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
   <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4.5 18.5A1.6 1.6 0 0 0 5.9 21h12.2a1.6 1.6 0 0 0 1.4-2.5L14 9V3"/><line x1="7" y1="15" x2="17" y2="15"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
 </svg>
 
@@ -349,6 +362,8 @@
     <div class="nav-label">Gerencia</div>
     <button class="nav-item" data-view="informe"><svg class="icon"><use href="#i-msg"/></svg> Informe ejecutivo</button>
     <button class="nav-item" data-view="salud"><svg class="icon"><use href="#i-heart"/></svg> Salud de la cuenta</button>
+    <div class="nav-label">Clientes</div>
+    <button class="nav-item" data-view="sitios"><svg class="icon"><use href="#i-globe"/></svg> Sitios web</button>
     <div class="nav-label">Configuración</div>
     <button class="nav-item" data-view="conexion"><svg class="icon"><use href="#i-link"/></svg> Conexión</button>
   </nav>
@@ -393,6 +408,7 @@ const VISTAS = {
   comparador: ['Comparador', 'Hasta 3 videos lado a lado'],
   informe: ['Informe ejecutivo', 'Resultados del periodo, resumen redactado y metas'],
   laboratorio: ['Laboratorio', 'Curva de vida, despegues, seguidores por video, temas, proyección y calendario'],
+  sitios: ['Sitios web', 'Visitas, tiempo e interacción en las páginas de los clientes'],
   salud: ['Salud de la cuenta', 'Auditoría automática del perfil y del contenido'],
   conexion: ['Conexión', 'Cuenta vinculada, permisos y sincronización'],
 };
@@ -563,7 +579,7 @@ function pintar() {
   if (!cfg.configurado) html += `<div class="aviso warn">Faltan variables de TikTok en el servidor. Hasta configurarlas no se puede conectar la cuenta.</div>`;
   if (datos.cuenta?.ultimo_error) html += `<div class="aviso err">Última sincronización con error: ${esc(datos.cuenta.ultimo_error)}</div>`;
 
-  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: vRendimiento, analisis: vAnalisis, tendencias: vTendencias, estrategia: vEstrategia, comparador: vComparador, informe: vInforme, laboratorio: vLaboratorio, salud: vSalud, conexion: vConexion }[vista])();
+  html += !datos.cuenta ? vistaConectar() : ({ resumen: vResumen, crecimiento: vCrecimiento, videos: vVideos, rendimiento: vRendimiento, analisis: vAnalisis, tendencias: vTendencias, estrategia: vEstrategia, comparador: vComparador, informe: vInforme, laboratorio: vLaboratorio, sitios: vSitios, salud: vSalud, conexion: vConexion }[vista])();
   $('app').innerHTML = html;
   enlazar();
 }
@@ -848,6 +864,7 @@ function enlazar() {
   if (typeof enlazarEstrategia === 'function') enlazarEstrategia();
   if (typeof enlazarComparador === 'function') enlazarComparador();
   if (typeof enlazarLaboratorio === 'function') enlazarLaboratorio();
+  if (typeof enlazarSitios === 'function') enlazarSitios();
   $('btn-conectar')?.addEventListener('click', e => conectar(e.currentTarget));
   $('btn-reconectar')?.addEventListener('click', e => conectar(e.currentTarget));
   $('btn-desconectar')?.addEventListener('click', e => desconectar(e.currentTarget.dataset.id));
@@ -875,6 +892,7 @@ document.addEventListener('visibilitychange', () => {
 <script src="estrategia.js?v=3"></script>
 <script src="salud.js?v=2"></script>
 <script src="pro.js?v=2"></script>
-<script src="horas.js?v=15"></script>
+<script src="horas.js?v=16"></script>
+<script src="sitios.js?v=1"></script>
 </body>
 </html>
