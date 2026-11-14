@@ -150,9 +150,7 @@ function vCrecimientoHoras() {
             <td class="up">+${num(x.vistas)}</td><td>${sg(x.likes)}</td><td>${sg(x.com)}</td><td>${sg(x.sh)}</td>
             <td>${x.pico.v ? `<b>${String(x.pico.h).padStart(2, '0')}:00</b><br><small class="sub">+${num(x.pico.v)}</small>` : '—'}</td>
             <td>${miniHoras(x.horas)}</td></tr>
-            ${abierto ? `<tr class="vh-det"><td colspan="7">${conDatos.length ? `<div class="vh-grid">${conDatos.map(([h, o]) => `<div class="${o.v ? 'si' : ''}"><b>${String(h).padStart(2, '0')}:00</b>
-                <span>👁 ${o.v > 0 ? '+' : ''}${num(o.v)}</span><span>❤ ${o.l > 0 ? '+' : ''}${num(o.l)}</span><span>💬 ${o.c > 0 ? '+' : ''}${num(o.c)}</span><span>↗ ${o.s > 0 ? '+' : ''}${num(o.s)}</span></div>`).join('')}</div>`
-              : '<span class="sub">Aún sin fotos por hora de este video en el día.</span>'}</td></tr>` : ''}`;
+            ${abierto ? `<tr class="vh-det"><td colspan="7">${detalleVideo(x)}</td></tr>` : ''}`;
         }).join('')}
       </tbody></table></div>` : '<p class="vacio">Sin cambios registrados en los videos este día.</p>'}
     </section>
@@ -179,3 +177,31 @@ document.addEventListener('click', e => {
   vidAbiertos.has(id) ? vidAbiertos.delete(id) : vidAbiertos.add(id);
   repintarSeguro();
 });
+
+// Panel de detalle por hora de un video: resumen + lista de horas con barra proporcional
+function detalleVideo(x) {
+  const filas = x.horas.map((o, h) => [h, o]).filter(([, o]) => o);
+  if (!filas.length) return '<p class="sub" style="margin:4px 0">Aún sin fotos por hora de este video en el día.</p>';
+  const max = Math.max(1, ...filas.map(([, o]) => o.v));
+  const total = filas.reduce((a, [, o]) => a + Math.max(0, o.v), 0);
+  const activas = filas.filter(([, o]) => o.v > 0).length;
+  const hh = h => String(h).padStart(2, '0') + ':00';
+  const cel = n => (n ? `<b class="${n > 0 ? 'up' : 'down'}">${n > 0 ? '+' : ''}${num(n)}</b>` : '<span class="cero">—</span>');
+  return `<div class="vd">
+    <div class="vd-res">
+      <div><small>Vistas en el día</small><b>+${num(x.vistas)}</b></div>
+      <div><small>Hora pico</small><b>${x.pico.v ? hh(x.pico.h) : '—'}</b>${x.pico.v ? `<em>+${num(x.pico.v)} vistas</em>` : ''}</div>
+      <div><small>Promedio por hora</small><b>${num(Math.round(total / filas.length))}</b><em>en ${filas.length} hora(s) medidas</em></div>
+      <div><small>Interacción del día</small><b>${num(x.likes + x.com + x.sh)}</b><em>${num(x.likes)} likes · ${num(x.com)} coment. · ${num(x.sh)} compart.</em></div>
+    </div>
+    <div class="vd-lista">
+      <div class="vd-cab"><span>Hora</span><span>Vistas ganadas</span><span>% del día</span><span>Likes</span><span>Coment.</span><span>Compart.</span></div>
+      ${filas.map(([h, o]) => `<div class="vd-fila ${x.pico.v && h === x.pico.h ? 'pico' : ''}">
+        <span class="vd-h">${hh(h)}${x.pico.v && h === x.pico.h ? ' <i>pico</i>' : ''}</span>
+        <span class="vd-barra"><span><i style="width:${o.v > 0 ? Math.max(3, o.v / max * 100) : 0}%"></i></span><b>${o.v > 0 ? '+' : ''}${num(o.v)}</b></span>
+        <span class="vd-pct">${total ? (Math.max(0, o.v) / total * 100).toFixed(0) + ' %' : '—'}</span>
+        <span>${cel(o.l)}</span><span>${cel(o.c)}</span><span>${cel(o.s)}</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
