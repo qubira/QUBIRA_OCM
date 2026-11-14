@@ -308,6 +308,20 @@
   table.rd-tabla td:first-child, table.rd-tabla th:first-child, table.rd-tabla td:last-child, table.rd-tabla th:last-child { text-align: left; } table.rd-tabla td:nth-child(2):has(a) { text-align: left; }
   tr.rd-mejor td { background: #ecfdf5; } tr.rd-vacio td { color: #cbd5e1; }
   .rd-pila { display: flex; height: 14px; border-radius: 99px; overflow: hidden; margin: 4px 0 12px; background: #f1f5f9; }
+  /* ¿Cuándo publicar? */
+  table.cu-tabla { border-collapse: separate; border-spacing: 4px; width: 100%; min-width: 640px; }
+  table.cu-tabla th { font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; text-transform: uppercase; } table.cu-tabla th small { display: block; font-weight: 500; text-transform: none; font-size: 10px; }
+  table.cu-tabla td { text-align: center; border-radius: 8px; padding: 7px 4px; position: relative; }
+  table.cu-tabla td b { display: block; font-size: 13px; } table.cu-tabla td small { display: block; font-size: 9.5px; opacity: .85; margin-top: 1px; }
+  td.cu-dia { text-align: left !important; background: none; font-size: 12.5px; } td.cu-vacia { background: #f8fafc; color: #cbd5e1; font-size: 12px; }
+  td.cu-celda { cursor: help; } td.cu-celda i { position: absolute; top: 2px; right: 4px; font-style: normal; font-size: 10px; }
+  .cu-tot { background: #f1f5f9 !important; } tr.cu-pie td { background: #f8fafc; border-top: 2px solid var(--border); }
+  .cu-leyenda { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 11.5px; margin: 10px 0 4px; }
+  .cu-leyenda i { width: 120px; height: 9px; border-radius: 99px; background: linear-gradient(90deg, rgba(219,39,119,.12), rgba(219,39,119,1)); }
+  .cu-insights { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+  .cu-insights > div { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 12.5px; }
+  .cu-insights small { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; } .cu-insights p { margin: 3px 0; }
+  .cu-aviso { font-size: 10px; font-weight: 700; color: #b45309; background: #fef3c7; border-radius: 99px; padding: 1px 7px; }
   .st-click { cursor: pointer; } .st-click:hover td { background: #f5f3ff; }
   /* Selector de rango */
   .seg-rango { flex-wrap: wrap; align-items: center; }
@@ -926,7 +940,7 @@ document.addEventListener('visibilitychange', () => {
 });
 </script>
 <script src="analisis.js?v=5"></script>
-<script src="estrategia.js?v=5"></script>
+<script src="estrategia.js?v=6"></script>
 <script src="salud.js?v=2"></script>
 <script src="pro.js?v=4"></script>
 <script src="horas.js?v=16"></script>

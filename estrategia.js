@@ -85,12 +85,7 @@ function vEstrategia() {
 
   return `
     <section class="grid g2">
-      <div class="card panel"><div class="sec-title">¿Cuándo publicar? <small>vistas medias por día y franja (Lima)</small></div>
-        <div class="scroll"><table class="calor"><thead><tr><th></th>${franjas.map(f => `<th>${f[2]}</th>`).join('')}</tr></thead><tbody>
-          ${[1, 2, 3, 4, 5, 6, 0].map(d => `<tr><td><b>${DIAS_CORTOS[d]}</b></td>${franjas.map((_, f) => { const c = celda[d + '-' + f]; const m = c ? c.s / c.n : 0;
-            return `<td title="${c ? `${c.n} video(s) · ${num(Math.round(m))} vistas medias` : 'Sin publicaciones'}" style="background:${c ? `rgba(219,39,119,${(0.12 + 0.88 * m / maxC).toFixed(2)})` : '#f9fafb'};color:${c && m / maxC > 0.55 ? '#fff' : '#111827'}">${c ? corto(m) : ''}</td>`; }).join('')}</tr>`).join('')}
-        </tbody></table></div>
-        ${mejorCelda ? `<p class="sub" style="margin-top:10px">Mejor combinación: <b>${DIAS_CORTOS[+mejorCelda[0].split('-')[0]]} · ${franjas[+mejorCelda[0].split('-')[1]][2]}</b> (${num(Math.round(mejorCelda[1].s / mejorCelda[1].n))} vistas medias en ${mejorCelda[1].n} video(s)).</p>` : ''}</div>
+      ${mapaCuando(v, franjas)}
       <div class="card panel"><div class="sec-title">¿Qué influye en las vistas? <small>correlación con las vistas (−1 a 1)</small></div>
         <div class="bars">${factores.map(f => `<div class="bar-row" style="grid-template-columns:150px 1fr 120px"><span class="lbl">${f.n}</span>
           <div class="track" style="position:relative"><div class="fill" style="position:absolute;left:${f.r < 0 ? 50 + f.r * 50 : 50}%;width:${Math.abs(f.r) * 50}%;--c:${f.r >= 0 ? '#059669' : '#dc2626'}"></div><div style="position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:#9ca3af"></div></div>
@@ -311,5 +306,50 @@ function graficoDuracion(v) {
     <p class="sub" style="font-size:12px"><span style="color:#10b981">●</span> sobre la mediana · <span style="color:#f59e0b">●</span> bajo la mediana · el tamaño del punto es la interacción · <span style="color:#7c3aed">┄</span> tendencia · toca un punto para abrir el video.</p>
     <div class="insight" style="margin-top:10px"><span class="e">⏱</span><div><b>${mejor ? `Tu mejor duración: ${mejor.et}` : 'Duración'}</b><p>${mejor ? `Esos videos logran una mediana de ${num(Math.round(mejor.med))} vistas (${(mejor.med / med).toFixed(1)}× lo normal de la cuenta). ` : ''}La duración ${fuerzaR} (r = ${r.toFixed(2)}).</p></div></div>
     ${tabla}
+  </div>`;
+}
+
+/* ─── ¿Cuándo publicar? (detallado) ───────────────────────────────────────── */
+function mapaCuando(v, franjas) {
+  const vs = v.filter(x => x.publicado_en);
+  const celda = {}, porDia = {}, porFr = {};
+  const suma = (o, x) => { o.n++; o.s += +x.vistas; o.i += +x.likes + +x.comentarios + +x.compartidos; o.vids.push(x); };
+  const nuevo = () => ({ n: 0, s: 0, i: 0, vids: [] });
+  vs.forEach(x => {
+    const d = diaLima(x.publicado_en), h = horaLima(x.publicado_en), fr = franjas.findIndex(([a, b]) => h >= a && h < b);
+    suma(celda[d + '-' + fr] ||= nuevo(), x); suma(porDia[d] ||= nuevo(), x); suma(porFr[fr] ||= nuevo(), x);
+  });
+  const media = c => (c && c.n ? c.s / c.n : 0), tasa = c => (c && c.s ? c.i / c.s * 100 : 0);
+  const medCuenta = mediana(vs.map(x => +x.vistas)) || 1;
+  const valores = Object.values(celda).map(media), maxC = Math.max(1, ...valores), minC = Math.min(...valores);
+  const color = m => `rgba(219,39,119,${(0.12 + 0.88 * m / maxC).toFixed(2)})`;
+  const tit = x => (x.titulo || 'Sin título').replace(/\*\*/g, '').replace(/"/g, "'").slice(0, 50);
+  const orden = [1, 2, 3, 4, 5, 6, 0];
+  const fila = d => `<tr><td class="cu-dia"><b>${DIAS_CORTOS[d]}</b></td>${franjas.map((_, fr) => {
+      const c = celda[d + '-' + fr], m = media(c);
+      if (!c) return '<td class="cu-vacia">—</td>';
+      const tip = `${DIAS_CORTOS[d]} · ${franjas[fr][2]}\n${c.n} video(s) · ${num(Math.round(m))} vistas medias · ${tasa(c).toFixed(1)} % interacción\n${c.vids.map(x => '• ' + tit(x) + ' — ' + num(+x.vistas)).join('\n')}`;
+      return `<td class="cu-celda" style="background:${color(m)};color:${m / maxC > 0.5 ? '#fff' : '#111827'}" title="${esc(tip)}"><b>${num(Math.round(m))}</b><small>${c.n} video${c.n > 1 ? 's' : ''} · ${tasa(c).toFixed(1)} %</small>${m >= medCuenta * 2 ? '<i>🔥</i>' : ''}</td>`;
+    }).join('')}<td class="cu-tot"><b>${porDia[d] ? num(Math.round(media(porDia[d]))) : '—'}</b><small>${porDia[d] ? porDia[d].n + ' videos' : ''}</small></td></tr>`;
+  // Mejores combinaciones (se priorizan las que tienen 2 o más videos: son más fiables)
+  const combos = Object.entries(celda).map(([k, c]) => ({ d: +k.split('-')[0], fr: +k.split('-')[1], c, m: media(c) }))
+    .sort((a, b) => (b.c.n >= 2) - (a.c.n >= 2) || b.m - a.m);
+  const top = combos.slice(0, 3);
+  const mejorDia = orden.filter(d => porDia[d]).sort((a, b) => media(porDia[b]) - media(porDia[a]))[0];
+  const mejorFr = franjas.map((_, i) => i).filter(i => porFr[i]).sort((a, b) => media(porFr[b]) - media(porFr[a]))[0];
+  const probadas = Object.keys(celda).length, total = 7 * franjas.length;
+  return `<div class="card panel" style="grid-column:1/-1"><div class="sec-title">¿Cuándo publicar? <small>vistas medias por día y franja · hora de Lima · ${vs.length} videos</small></div>
+    <div class="scroll"><table class="cu-tabla"><thead><tr><th></th>${franjas.map(([a, b, n]) => `<th>${n}<small>${a}–${b} h</small></th>`).join('')}<th class="cu-tot">Por día</th></tr></thead><tbody>
+      ${orden.map(fila).join('')}
+      <tr class="cu-pie"><td class="cu-dia"><b>Por franja</b></td>${franjas.map((_, fr) => `<td><b>${porFr[fr] ? num(Math.round(media(porFr[fr]))) : '—'}</b><small>${porFr[fr] ? porFr[fr].n + ' videos · ' + tasa(porFr[fr]).toFixed(1) + ' %' : ''}</small></td>`).join('')}<td class="cu-tot"><b>${num(Math.round(medCuenta))}</b><small>mediana</small></td></tr>
+    </tbody></table></div>
+    <div class="cu-leyenda"><span>${num(Math.round(minC || 0))}</span><i></i><span>${num(Math.round(maxC))} vistas medias</span><span class="sub">· en cada casilla: vistas medias, videos y % de interacción · 🔥 = más del doble de la mediana · pasa el mouse para ver los videos</span></div>
+    <div class="cu-insights">
+      <div><small>🏆 Mejores momentos</small>${top.map((t, i) => `<p><b>${i + 1}. ${DIAS_CORTOS[t.d]} · ${franjas[t.fr][2]}</b> <span class="sub">(${franjas[t.fr][0]}–${franjas[t.fr][1]} h)</span> — ${num(Math.round(t.m))} vistas medias ${t.c.n < 2 ? '<span class="cu-aviso">1 solo video</span>' : `<span class="sub">en ${t.c.n} videos</span>`}</p>`).join('')}</div>
+      <div><small>📅 Mejor día</small><p><b>${mejorDia != null ? DIAS_CORTOS[mejorDia] : '—'}</b> ${mejorDia != null ? `— ${num(Math.round(media(porDia[mejorDia])))} vistas medias (${(media(porDia[mejorDia]) / medCuenta).toFixed(1)}× la mediana)` : ''}</p>
+        <small style="margin-top:8px">🕘 Mejor franja</small><p><b>${mejorFr != null ? franjas[mejorFr][2] + ' (' + franjas[mejorFr][0] + '–' + franjas[mejorFr][1] + ' h)' : '—'}</b> ${mejorFr != null ? `— ${num(Math.round(media(porFr[mejorFr])))} vistas medias` : ''}</p></div>
+      <div><small>🧪 Por probar</small><p>Has publicado en <b>${probadas} de ${total}</b> combinaciones de día y franja. ${probadas < total / 2 ? 'Prueba nuevos horarios para descubrir mejores momentos.' : 'Ya cubres buena parte de la semana.'}</p>
+        <p class="sub" style="font-size:11.5px">Las combinaciones con un solo video son poco fiables: repítelas para confirmar.</p></div>
+    </div>
   </div>`;
 }
