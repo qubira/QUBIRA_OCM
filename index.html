@@ -519,7 +519,7 @@ function aplicarMenuContraido(contraido) {
 }
 try { aplicarMenuContraido(localStorage.getItem('ocm_sb') === '1'); } catch (_) {}
 document.getElementById('sidebar-toggle').onclick = () => aplicarMenuContraido(!document.body.classList.contains('sidebar-colapsada'));
-window.addEventListener('hashchange', () => { estado.vista = VISTAS[location.hash.slice(1)] ? location.hash.slice(1) : 'resumen'; document.body.classList.remove('menu-abierto'); pintar(); });
+window.addEventListener('hashchange', () => { window.scrollTo(0, 0); estado.vista = VISTAS[location.hash.slice(1)] ? location.hash.slice(1) : 'resumen'; document.body.classList.remove('menu-abierto'); pintar(); });
 estado.vista = VISTAS[location.hash.slice(1)] ? location.hash.slice(1) : 'resumen';
 
 async function api(ruta, opciones = {}) {
