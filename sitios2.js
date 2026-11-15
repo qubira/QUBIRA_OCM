@@ -80,7 +80,27 @@ function seccionesSitio(d) {
     </tbody></table></div>` : '<p class="vacio">Sin visitas en este periodo.</p>'}
   </section>`;
 
-  return comparacion + `<section class="grid g2">${calidad}${fidelidad}</section>` + recorrido + mapa + recientes;
+  // Embudo del cotizador (solo aparece si el sitio tiene cotizador y hay datos)
+  const cot = d.cotizador || [];
+  let embudo = '';
+  if (cot.length) {
+    const pasos = cot.filter(x => /^Cotizador · \d/.test(x.etiqueta))
+      .map(x => ({ n: x.etiqueta.replace('Cotizador · ', '').replace(/^\d+ /, ''), v: +x.visitas, o: +x.etiqueta.match(/\d+/)[0] }))
+      .sort((p, q) => p.o - q.o);
+    const pide = cot.filter(x => x.etiqueta.startsWith('Cotizador · Pide: '))
+      .map(x => ({ tipo: x.etiqueta.replace('Cotizador · Pide: ', ''), visitas: +x.visitas })).sort((p, q) => q.visitas - p.visitas);
+    const base = (pasos[0] && pasos[0].v) || 1;
+    const env = pasos.find(p => /Enviado/.test(p.n));
+    const enviados = env ? env.v : 0;
+    const filas = pasos.map((p, i) => {
+      const prev = pasos[i - 1], caida = prev ? Math.round((1 - p.v / Math.max(1, prev.v)) * 100) : 0;
+      return '<div class="st-fila"><span>' + esc(p.n) + '</span><span class="st-barra"><i style="width:' + (p.v / base * 100).toFixed(1) + '%;background:' + (/Enviado/.test(p.n) ? '#10b981' : '#4f46e5') + '"></i></span><b>' + num(p.v) + '</b><small style="color:#dc2626">' + (prev && caida > 0 ? '−' + caida + ' %' : '') + '</small></div>';
+    }).join('');
+    embudo = '<section class="card panel" style="margin-bottom:16px"><div class="sec-title">Embudo del cotizador <small>' + num(base) + ' lo abrieron · ' + num(enviados) + ' enviaron su cotización (' + Math.round(enviados / base * 100) + ' %)</small></div>' +
+      '<div class="grid g2" style="margin:0"><div><div class="st-lista">' + filas + '</div><p class="sub" style="font-size:12px;margin-top:8px">En rojo: cuántos abandonaron respecto al paso anterior.</p></div>' +
+      '<div><p class="st-sub">🧩 Qué piden más</p>' + (pide.length ? listaBarras(pide, 'tipo', 'visitas', num, '#db2777') : '<p class="vacio">Aún nadie envió una cotización en este periodo.</p>') + '</div></div></section>';
+  }
+  return comparacion + embudo + `<section class="grid g2">${calidad}${fidelidad}</section>` + recorrido + mapa + recientes;
 }
 
 // Descarga CSV: últimas visitas y páginas del periodo
