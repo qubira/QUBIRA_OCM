@@ -114,11 +114,14 @@ function vCrecimientoHoras() {
     const a = s[0].hora.slice(0, 10) < fechaModo() ? s[0]
       : (s[0].vistas_ini != null ? { vistas: s[0].vistas_ini, likes: s[0].likes_ini, comentarios: s[0].comentarios_ini, compartidos: s[0].compartidos_ini } : s[0]);
     // Ganancia de cada hora del video: contra su foto de la hora anterior o, si no hay, dentro de la misma hora
-    const horas = Array(24).fill(null);
+    const horas = Array(24).fill(null), huecos = [];
     s.forEach((r, i) => {
       if (r.hora.slice(0, 10) !== fechaModo()) return;
       const h = +r.hora.slice(11, 13), p = s[i - 1];
       const ph = p ? (p.hora.slice(0, 10) < fechaModo() ? -1 : +p.hora.slice(11, 13)) : null;
+      if (p && ph < h - 1 && r.vistas_ini != null) {
+        huecos.push({ desde: ph + 1, hasta: h - 1, o: { v: +r.vistas_ini - +p.vistas, l: +r.likes_ini - +p.likes, c: +r.comentarios_ini - +p.comentarios, s: +r.compartidos_ini - +p.compartidos } });
+      }
       const ref = p && ph === h - 1 ? p : (r.vistas_ini != null ? { vistas: r.vistas_ini, likes: r.likes_ini, comentarios: r.comentarios_ini, compartidos: r.compartidos_ini } : null);
       horas[h] = ref ? { v: +r.vistas - +ref.vistas, l: +r.likes - +ref.likes, c: +r.comentarios - +ref.comentarios, s: +r.compartidos - +ref.compartidos } : { v: 0, l: 0, c: 0, s: 0 };
     });
@@ -128,7 +131,7 @@ function vCrecimientoHoras() {
     const antes = s.filter(r => r.hora.slice(0, 10) < fechaModo() || +r.hora.slice(11, 13) < refHora).at(-1);
     const actualH = s.find(r => r.hora.slice(0, 10) === fechaModo() && +r.hora.slice(11, 13) === refHora);
     const previoV = antes ? +antes.vistas : (actualH && actualH.vistas_ini != null ? +actualH.vistas_ini : +a.vistas);
-    return { id, v, horas, pico, vistasPrev: Math.max(0, previoV - +a.vistas), vistas: +z.vistas - +a.vistas, likes: +z.likes - +a.likes, com: +z.comentarios - +a.comentarios, sh: +z.compartidos - +a.compartidos };
+    return { id, v, horas, huecos, pico, vistasPrev: Math.max(0, previoV - +a.vistas), vistas: +z.vistas - +a.vistas, likes: +z.likes - +a.likes, com: +z.comentarios - +a.comentarios, sh: +z.compartidos - +a.compartidos };
   });
   // Puesto actual y puesto al cierre de la hora anterior (ranking por vistas ganadas en el día)
   const orden = (k) => [...todos].sort((a, b) => b[k] - a[k] || a.id.localeCompare(b.id));
@@ -205,22 +208,29 @@ document.addEventListener('click', e => {
 
 // Panel de detalle por hora de un video: resumen + lista de horas con barra proporcional
 function detalleVideo(x) {
-  const filas = x.horas.map((o, h) => [h, o]).filter(([, o]) => o);
+  const hh = h => String(h).padStart(2, '0');
+  const filas = [
+    ...x.horas.map((o, h) => (o ? { orden: h, h, o } : null)).filter(Boolean),
+    ...(x.huecos || []).filter(g => g.o.v || g.o.l || g.o.c || g.o.s).map(g => ({ orden: g.desde - 0.5, hueco: g, o: g.o })),
+  ].sort((a, b) => a.orden - b.orden);
   if (!filas.length) return '<p class="sub" style="margin:4px 0">Aún sin fotos por hora de este video en el día.</p>';
-  const max = Math.max(1, ...filas.map(([, o]) => o.v));
-  const total = filas.reduce((a, [, o]) => a + Math.max(0, o.v), 0);
-  const activas = filas.filter(([, o]) => o.v > 0).length;
-  const hh = h => String(h).padStart(2, '0') + ':00';
+  const max = Math.max(1, ...filas.map(f => f.o.v));
+  const total = filas.reduce((a, f) => a + Math.max(0, f.o.v), 0);
   const cel = n => (n ? `<b class="${n > 0 ? 'up' : 'down'}">${n > 0 ? '+' : ''}${num(n)}</b>` : '<span class="cero">—</span>');
+  const etq = f => f.hueco
+    ? `${hh(f.hueco.desde)}${f.hueco.hasta > f.hueco.desde ? '–' + hh(f.hueco.hasta) : ''} h <i class="vd-sin">sin registro</i>`
+    : `${hh(f.h)}:00${x.pico.v && f.h === x.pico.h ? ' <i>pico</i>' : ''}`;
+  const conHuecos = filas.some(f => f.hueco);
   return `<div class="vd">
     <div class="vd-lista">
       <div class="vd-cab"><span>Hora</span><span>Vistas ganadas</span><span>% del día</span><span>Likes</span><span>Coment.</span><span>Compart.</span></div>
-      ${filas.map(([h, o]) => `<div class="vd-fila ${x.pico.v && h === x.pico.h ? 'pico' : ''}">
-        <span class="vd-h">${hh(h)}${x.pico.v && h === x.pico.h ? ' <i>pico</i>' : ''}</span>
-        <span class="vd-barra"><span><i style="width:${o.v > 0 ? Math.max(3, o.v / max * 100) : 0}%"></i></span><b>${o.v > 0 ? '+' : ''}${num(o.v)}</b></span>
-        <span class="vd-pct">${total ? (Math.max(0, o.v) / total * 100).toFixed(0) + ' %' : '—'}</span>
-        <span>${cel(o.l)}</span><span>${cel(o.c)}</span><span>${cel(o.s)}</span>
+      ${filas.map(f => `<div class="vd-fila ${f.hueco ? 'hueco' : x.pico.v && f.h === x.pico.h ? 'pico' : ''}">
+        <span class="vd-h">${etq(f)}</span>
+        <span class="vd-barra"><span><i style="width:${f.o.v > 0 ? Math.max(3, f.o.v / max * 100) : 0}%"></i></span><b>${f.o.v > 0 ? '+' : ''}${num(f.o.v)}</b></span>
+        <span class="vd-pct">${total ? (Math.max(0, f.o.v) / total * 100).toFixed(0) + ' %' : '—'}</span>
+        <span>${cel(f.o.l)}</span><span>${cel(f.o.c)}</span><span>${cel(f.o.s)}</span>
       </div>`).join('')}
     </div>
+    ${conHuecos ? '<p class="sub" style="font-size:11.5px;margin-top:6px">«Sin registro»: horas en que no hubo sincronización (panel cerrado y servidor dormido). Se muestra lo ganado en todo ese lapso, sin poder separarlo por hora.</p>' : ''}
   </div>`;
 }

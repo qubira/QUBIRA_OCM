@@ -247,16 +247,19 @@
   .vd-res b { font-size: 20px; font-weight: 800; color: var(--text); } .vd-res div:first-child b { color: #0891b2; }
   .vd-res em { font-style: normal; font-size: 11.5px; color: var(--muted); }
   .vd-lista { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .vd-cab, .vd-fila { display: grid; grid-template-columns: 92px minmax(160px, 1fr) 70px 64px 64px 70px; gap: 10px; align-items: center; padding: 8px 14px; font-size: 12.5px; }
+  .vd-cab, .vd-fila { display: grid; grid-template-columns: 150px minmax(160px, 1fr) 70px 64px 64px 70px; gap: 10px; align-items: center; padding: 8px 14px; font-size: 12.5px; }
   .vd-cab { background: #f9fafb; font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
   .vd-cab span:nth-child(n+3), .vd-fila > span:nth-child(n+3) { text-align: right; }
-  .vd-fila { border-top: 1px solid #f3f4f6; } .vd-fila.pico { background: #ecfeff; }
+  .vd-fila { border-top: 1px solid #f3f4f6; }
+  .vd-fila.hueco { background: repeating-linear-gradient(135deg, #fafafa 0 6px, #f3f4f6 6px 12px); } .vd-fila.hueco .vd-barra i { background: #cbd5e1; } .vd-fila.hueco .vd-barra b { color: #64748b; }
+  .vd-h i.vd-sin { color: #475569; background: #e2e8f0; }
+  .vd-sin { font-style: normal; font-size: 10px; font-weight: 700; color: #64748b; background: #e2e8f0; border-radius: 99px; padding: 1px 7px; margin-left: 4px; } .vd-fila.pico { background: #ecfeff; }
   .vd-h { font-weight: 700; } .vd-h i { font-style: normal; font-size: 10px; font-weight: 700; color: #0e7490; background: #cffafe; border-radius: 99px; padding: 1px 7px; margin-left: 4px; }
   .vd-barra { display: flex; align-items: center; gap: 10px; } .vd-barra > span { flex: 1; height: 8px; border-radius: 99px; background: #f1f5f9; overflow: hidden; }
   .vd-barra i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #22d3ee, #0891b2); }
   .vd-barra b { min-width: 46px; text-align: right; color: #0891b2; }
   .vd-pct { color: var(--muted); font-weight: 600; } .vd .cero { color: #d1d5db; } .vd .up { color: var(--ok); } .vd .down { color: #dc2626; }
-  @media (max-width: 640px) { .vd-cab, .vd-fila { grid-template-columns: 62px minmax(90px, 1fr) 44px 40px 40px 44px; gap: 6px; padding: 7px 8px; font-size: 11.5px; } .vd-barra b { min-width: 34px; } }
+  @media (max-width: 640px) { .vd-cab, .vd-fila { grid-template-columns: 112px minmax(80px, 1fr) 44px 40px 40px 44px; gap: 6px; padding: 7px 8px; font-size: 11.5px; } .vd-barra b { min-width: 34px; } }
   .vh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
   .vh-grid div { display: grid; gap: 2px; border: 1px solid var(--border); border-radius: 9px; padding: 7px 9px; font-size: 11.5px; background: #fff; }
   .vh-grid div.si { border-color: #a5f3fc; background: #ecfeff; } .vh-grid b { font-size: 12px; }
@@ -955,7 +958,7 @@ document.addEventListener('visibilitychange', () => {
 <script src="estrategia.js?v=8"></script>
 <script src="salud.js?v=2"></script>
 <script src="pro.js?v=4"></script>
-<script src="horas.js?v=16"></script>
+<script src="horas.js?v=17"></script>
 <script src="sitios.js?v=3"></script>
 <script src="sitios2.js?v=1"></script>
 <script src="detalle.js?v=2"></script>
